@@ -12,7 +12,7 @@ class Usuario(models.Model):
     ]
     nome = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    senha = models.CharField(max_length=255)  # Em produção, usar AbstractUser ou gerenciar hashes
+    senha = models.CharField(max_length=255)  
     tipo_perfil = models.CharField(max_length=10, choices=PERFIL_CHOICES)
 
     def __str__(self):

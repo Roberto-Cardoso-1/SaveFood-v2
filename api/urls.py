@@ -10,7 +10,7 @@ router.register(r'doacoes', DoacaoViewSet)
 
 @api_view(['POST'])
 def login(request):
-    # Lógica de login simplificada para exemplo
+    
     return Response({"message": "Endpoint de login acessado"}, status=200)
 
 urlpatterns = [
