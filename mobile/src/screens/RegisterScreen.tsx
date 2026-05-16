@@ -1,0 +1,195 @@
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, User, Mail, Lock, Box, ShoppingBag, AlertCircle, Camera } from 'lucide-react-native';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
+import { useAppStore } from '../store/useAppStore';
+import { styled } from 'nativewind';
+import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import api from '../services/api';
+
+const StyledSafeAreaView = styled(SafeAreaView);
+
+const RegisterScreen = () => {
+  const navigation = useNavigation<any>();
+  const { registerUser, isDarkMode } = useAppStore();
+  const [objective, setObjective] = useState<'doador' | 'receptor' | null>(null);
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Theme-aware styles
+  const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
+  const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
+  const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+  const cardColor = isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50';
+  const borderColor = isDarkMode ? 'border-[#334155]' : 'border-green-50';
+
+  const pickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de acesso às suas fotos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleRegister = async () => {
+    setError(null);
+    setSuccess(false);
+    
+    if (!nome || !email || !senha || !objective) {
+      setError('Por favor, preencha todos os campos e selecione seu perfil.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post('usuarios/', {
+        nome,
+        email,
+        senha,
+        tipo_perfil: objective,
+      });
+
+      if (response.status === 201) {
+        registerUser({
+          name: nome,
+          email: email,
+          avatar: avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          tipo_perfil: objective === 'doador' ? 'Doador' : 'Receptor',
+        });
+        setSuccess(true);
+      }
+    } catch (err: any) {
+      console.error('Erro ao registrar:', err.response?.data || err.message);
+      const msg = err.response?.data?.email ? 'Este e-mail já existe.' : 'Erro ao criar conta no servidor.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
+      <ScrollView showsVerticalScrollIndicator={false} className="px-6">
+        <View className="py-8">
+          {/* Header */}
+          <View className="flex-row justify-between items-center mb-10">
+            <TouchableOpacity 
+              className={`w-12 h-12 ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-100'} rounded-2xl items-center justify-center border shadow-sm`} 
+              onPress={() => navigation.goBack()}
+            >
+              <ArrowLeft size={20} color={isDarkMode ? 'white' : '#111827'} />
+            </TouchableOpacity>
+            <View className={`h-1.5 w-12 ${isDarkMode ? 'bg-green-500/20' : 'bg-green-100'} rounded-full`} />
+          </View>
+          
+          <Text className={`text-5xl font-black ${textColor} tracking-tighter mb-2 leading-tight`}>Criar Conta</Text>
+          <Text className={`${subTextColor} text-lg font-medium mb-8`}>
+            Crie sua conta para ajudar a economizar <Text className="text-green-600 font-bold">comida</Text>.
+          </Text>
+
+          {/* Avatar Selection */}
+          <View className="items-center mb-10">
+            <TouchableOpacity 
+              onPress={pickAvatar}
+              className={`w-32 h-32 ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-full border-4 ${borderColor} items-center justify-center overflow-hidden`}
+            >
+              {avatar ? (
+                <Image source={{ uri: avatar }} className="w-full h-full" />
+              ) : (
+                <View className="items-center">
+                  <Camera size={32} color={isDarkMode ? '#475569' : '#D1D5DB'} />
+                  <Text className={`text-[10px] font-black ${isDarkMode ? 'text-gray-600' : 'text-gray-400'} mt-1 uppercase tracking-tighter`}>Foto</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Form */}
+          <View style={{ gap: 20 }}>
+            <Input label="Nome" placeholder="Seu nome completo" icon={User} value={nome} onChangeText={(text) => { setNome(text); setError(null); }} />
+            <Input label="E-mail" placeholder="seu@email.com" icon={Mail} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={(text) => { setEmail(text); setError(null); }} />
+            <Input label="Senha" placeholder="Escolha uma senha" icon={Lock} secureTextEntry value={senha} onChangeText={(text) => { setSenha(text); setError(null); }} />
+
+            {/* Objective Selection */}
+            <View className="mt-4 mb-4">
+              <Text className={`text-xl font-black ${textColor} mb-6 tracking-tight`}>O que você quer fazer?</Text>
+              <View className="flex-row" style={{ gap: 16 }}>
+                <TouchableOpacity
+                  onPress={() => { setObjective('doador'); setError(null); }}
+                  className={`flex-1 p-6 rounded-[32px] border-2 ${objective === 'doador' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'} items-center`}
+                >
+                  <View className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${objective === 'doador' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-white'}`}>
+                    <Box size={32} color={objective === 'doador' ? 'white' : '#64748B'} />
+                  </View>
+                  <Text className={`font-black text-sm uppercase tracking-wider ${objective === 'doador' ? 'text-green-600' : '#64748B'}`}>Vou Doar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => { setObjective('receptor'); setError(null); }}
+                  className={`flex-1 p-6 rounded-[32px] border-2 ${objective === 'receptor' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'} items-center`}
+                >
+                  <View className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${objective === 'receptor' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-white'}`}>
+                    <ShoppingBag size={32} color={objective === 'receptor' ? 'white' : '#64748B'} />
+                  </View>
+                  <Text className={`font-black text-sm uppercase tracking-wider ${objective === 'receptor' ? 'text-green-600' : '#64748B'}`}>Vou Receber</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Notifications */}
+            {error && (
+              <View className={`flex-row items-center ${isDarkMode ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'} p-5 rounded-[24px] border`}>
+                <View className="w-10 h-10 bg-red-100/20 rounded-full items-center justify-center mr-4">
+                  <AlertCircle size={20} color="#EF4444" />
+                </View>
+                <Text className="text-red-500 font-bold text-sm flex-1 leading-tight">{error}</Text>
+              </View>
+            )}
+
+            {success && (
+              <View className="flex-row items-center bg-green-500/10 p-5 rounded-[24px] border border-green-500/20">
+                <View className="w-10 h-10 bg-green-500 rounded-full items-center justify-center mr-4">
+                  <Text className="text-white text-lg font-bold">✓</Text>
+                </View>
+                <Text className="text-green-600 font-bold text-sm flex-1 leading-tight">Tudo certo! Redirecionando...</Text>
+              </View>
+            )}
+
+            <View className="mt-4 mb-10 shadow-2xl shadow-green-500/10">
+              <Button title="Criar conta" loading={loading} onPress={handleRegister} />
+            </View>
+          </View>
+
+          {/* Footer */}
+          <View className="flex-row justify-center pb-12">
+            <Text className={`${subTextColor} font-medium text-base`}>Já tem uma conta? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text className="text-green-600 font-black text-base">Entrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </StyledSafeAreaView>
+  );
+};
+
+export default RegisterScreen;

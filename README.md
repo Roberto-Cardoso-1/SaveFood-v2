@@ -67,7 +67,7 @@ Gerencia os alimentos disponíveis para doação.
 2.  **Configurar ambiente virtual:**
     ```bash
     python -m venv venv
-    .\venv\Scripts\activate  # No Windows
+    .\venv\Scripts\activate   #para o windows
     ```
 
 3.  **Instalar dependências:**

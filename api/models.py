@@ -29,6 +29,7 @@ class Doacao(models.Model):
     validade = models.DateField()
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='disponivel')
     doador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='doacoes')
+    imagem = models.ImageField(upload_to='doacoes/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.produto} ({self.quantidade})"
