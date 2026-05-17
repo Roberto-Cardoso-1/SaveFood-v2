@@ -29,7 +29,7 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // We use our custom floating bar in screens for now to keep the UI
+        tabBarStyle: { display: 'none' }, 
       }}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
@@ -49,7 +49,7 @@ export default function App() {
         <Stack.Navigator 
           screenOptions={{
             headerShown: false,
-            contentStyle: Platform.OS === 'web' ? { flex: 1, height: '100vh' } : undefined
+            contentStyle: Platform.OS === 'web' ? { flex: 1, height: '100%' } : undefined
           }}
         >
           {user === null ? (
