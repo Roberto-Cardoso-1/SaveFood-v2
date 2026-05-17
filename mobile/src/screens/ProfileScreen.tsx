@@ -80,18 +80,20 @@ const ProfileScreen = () => {
       const formData = new FormData();
       formData.append('nome', tempName);
       
-      const isNewLocalImage = tempAvatar && !tempAvatar.startsWith('http');
+      // No PC (Web), as URIs começam com 'blob:' ou 'data:'. No mobile, são caminhos de arquivo.
+      const isNewLocalImage = tempAvatar && (
+        tempAvatar.startsWith('blob:') || 
+        tempAvatar.startsWith('data:') || 
+        (!tempAvatar.startsWith('http') && Platform.OS !== 'web')
+      );
 
       if (isNewLocalImage) {
         if (Platform.OS === 'web') {
-          // No PC (Browser), precisamos converter a URI para um Blob real
           const response = await fetch(tempAvatar!);
           const blob = await response.blob();
-          const uriParts = tempAvatar!.split('.');
-          const fileType = uriParts[uriParts.length - 1];
-          formData.append('avatar', blob, `avatar_${Date.now()}.${fileType}`);
+          const fileName = `avatar_${Date.now()}.jpg`;
+          formData.append('avatar', blob, fileName);
         } else {
-          // No Celular (Android/iOS), usamos o objeto específico do React Native
           const uriParts = tempAvatar!.split('.');
           const fileType = uriParts[uriParts.length - 1];
           const fileName = `avatar_${Date.now()}.${fileType}`;
