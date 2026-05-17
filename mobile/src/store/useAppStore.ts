@@ -87,6 +87,7 @@ interface AppState {
   toggleDarkMode: () => void;
   setLocalizacao: (local: string) => void;
   setUser: (user: User | null) => void;
+  updateUser: (data: Partial<User>) => void;
   socialLogin: (provider: string) => void;
   logout: () => void;
   addDonation: (item: Omit<Donation, 'id' | 'estabelecimento' | 'distancia' | 'tempoExpiracao'>) => void;
@@ -192,6 +193,7 @@ export const useAppStore = create<AppState>((set) => ({
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
   setLocalizacao: (local) => set({ localizacao: local }),
   setUser: (user) => set({ user }),
+  updateUser: (data) => set((state) => ({ user: state.user ? { ...state.user, ...data } : null })),
   socialLogin: (provider: string) => 
     set({ user: { name: `Usuário ${provider}`, email: `${provider.toLowerCase()}@teste.com`, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400' } }),
   logout: () => set({ user: null }),

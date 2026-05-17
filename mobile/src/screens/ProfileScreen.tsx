@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Switch, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, ShoppingBag, Leaf, User, Clock, Settings, LogOut, ChevronRight, X, Shield, Bell, HelpCircle } from 'lucide-react-native';
+import { MapPin, ShoppingBag, Leaf, User, Clock, Settings, LogOut, ChevronRight, X, Shield, Bell, HelpCircle, Camera, Trash2 } from 'lucide-react-native';
 import { BottomTabBar } from '../components/BottomTabBar';
+import { Input } from '../components/Input';
+import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
 import { styled } from 'nativewind';
+import * as ImagePicker from 'expo-image-picker';
+import api from '../services/api';
 
 const StyledSafeAreaView = styled(SafeAreaView);
 
@@ -22,12 +26,79 @@ const MenuItem: React.FC<{ icon: any; label: string; isLast?: boolean; danger?: 
 );
 
 const ProfileScreen = () => {
-  const { user, logout, isDarkMode } = useAppStore();
+  const { user, logout, isDarkMode, updateUser } = useAppStore();
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   
+  // Form States
+  const [tempName, setTempName] = useState(user?.name || '');
+  const [tempAvatar, setTempAvatar] = useState(user?.avatar || null);
+
   // Settings States
   const [pushEnabled, setPushEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(true);
+
+  useEffect(() => {
+    if (activeModal === 'dados') {
+      setTempName(user?.name || '');
+      setTempAvatar(user?.avatar || null);
+      setIsEditing(false);
+    }
+  }, [activeModal, user]);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de acesso às suas fotos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setTempAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!tempName) {
+      Alert.alert('Erro', 'O nome não pode estar vazio.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Nota: Em um ambiente real com backend, enviaríamos o avatar como FormData
+      // Para fins de demonstração e persistência local no Store:
+      await api.patch(`usuarios/${user?.id}/`, {
+        nome: tempName,
+      });
+
+      updateUser({ name: tempName, avatar: tempAvatar || undefined });
+      setIsEditing(false);
+      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao atualizar perfil:', err);
+      Alert.alert('Erro', 'Não foi possível atualizar o perfil no servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
 
   // Theme-aware styles
   const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
@@ -40,29 +111,85 @@ const ProfileScreen = () => {
     switch (activeModal) {
       case 'dados':
         return (
-          <View className="px-6">
-            <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} mb-6`}>
-              <Text className={`${subTextColor} text-[10px] font-black uppercase tracking-widest mb-4`}>Informações da Conta</Text>
-              <View className="space-y-4">
-                <View>
-                  <Text className={`${subTextColor} text-xs mb-1`}>Nome Completo</Text>
-                  <Text className={`${textColor} font-bold text-base`}>{user?.name}</Text>
+          <View className="px-6 flex-1">
+            <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+              {isEditing ? (
+                <View className="space-y-6">
+                  {/* Edit Avatar */}
+                  <View className="items-center mb-8">
+                    <View className="relative">
+                      {tempAvatar ? (
+                        <Image source={{ uri: tempAvatar }} className="w-32 h-32 rounded-full border-4 border-green-500/20" />
+                      ) : (
+                        <View className="w-32 h-32 rounded-full bg-green-500 items-center justify-center border-4 border-green-500/20">
+                          <Text className="text-white text-4xl font-black">{getInitials(tempName)}</Text>
+                        </View>
+                      )}
+                      <TouchableOpacity 
+                        onPress={pickImage}
+                        className="absolute bottom-0 right-0 w-10 h-10 bg-green-500 rounded-full border-4 border-white items-center justify-center shadow-lg"
+                      >
+                        <Camera size={18} color="white" />
+                      </TouchableOpacity>
+                      {tempAvatar && (
+                        <TouchableOpacity 
+                          onPress={() => setTempAvatar(null)}
+                          className="absolute top-0 right-0 w-8 h-8 bg-red-500 rounded-full border-2 border-white items-center justify-center shadow-lg"
+                        >
+                          <Trash2 size={14} color="white" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                    <Text className={`${subTextColor} text-[10px] font-black uppercase mt-4 tracking-widest text-center`}>Toque para alterar a foto</Text>
+                  </View>
+
+                  <Input
+                    label="Nome Completo"
+                    value={tempName}
+                    onChangeText={setTempName}
+                    placeholder="Seu nome"
+                  />
+
+                  <View className="mt-8">
+                    <Button title="SALVAR ALTERAÇÕES" loading={loading} onPress={handleSaveProfile} />
+                    <TouchableOpacity 
+                      onPress={() => setIsEditing(false)}
+                      className="w-full py-4 items-center"
+                    >
+                      <Text className={`${subTextColor} font-bold`}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
-                <View>
-                  <Text className={`${subTextColor} text-xs mb-1`}>E-mail de Acesso</Text>
-                  <Text className={`${textColor} font-bold text-base`}>{user?.email}</Text>
-                </View>
-                <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
-                <View>
-                  <Text className={`${subTextColor} text-xs mb-1`}>Tipo de Perfil</Text>
-                  <Text className="text-green-600 font-bold text-base uppercase">{user?.tipo_perfil || 'Doador'}</Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity className="bg-green-500 py-4 rounded-2xl items-center shadow-lg shadow-green-500/20">
-              <Text className="text-white font-black">EDITAR PERFIL</Text>
-            </TouchableOpacity>
+              ) : (
+                <>
+                  <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} mb-6`}>
+                    <Text className={`${subTextColor} text-[10px] font-black uppercase tracking-widest mb-4`}>Informações da Conta</Text>
+                    <View className="space-y-4">
+                      <View>
+                        <Text className={`${subTextColor} text-xs mb-1`}>Nome Completo</Text>
+                        <Text className={`${textColor} font-bold text-base`}>{user?.name}</Text>
+                      </View>
+                      <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
+                      <View>
+                        <Text className={`${subTextColor} text-xs mb-1`}>E-mail de Acesso</Text>
+                        <Text className={`${textColor} font-bold text-base`}>{user?.email}</Text>
+                      </View>
+                      <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
+                      <View>
+                        <Text className={`${subTextColor} text-xs mb-1`}>Tipo de Perfil</Text>
+                        <Text className="text-green-600 font-bold text-base uppercase">{user?.tipo_perfil || 'Doador'}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <TouchableOpacity 
+                    onPress={() => setIsEditing(true)}
+                    className="bg-green-500 py-4 rounded-2xl items-center shadow-lg shadow-green-500/20"
+                  >
+                    <Text className="text-white font-black">EDITAR PERFIL</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </ScrollView>
           </View>
         );
       case 'historico':
@@ -128,26 +255,17 @@ const ProfileScreen = () => {
     }
   };
 
-  const getInitials = (name: string) => {
-    if (!name) return '??';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
-  };
-
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
       {/* Detail Modal */}
       <Modal visible={!!activeModal} animationType="slide" transparent={true}>
         <View className="flex-1 bg-black/50 justify-end">
-          <View className={`${isDarkMode ? 'bg-[#0F172A]' : 'bg-white'} rounded-t-[40px] h-[70%] pt-8`}>
+          <View className={`${isDarkMode ? 'bg-[#0F172A]' : 'bg-white'} rounded-t-[40px] h-[85%] pt-8`}>
             <View className="flex-row justify-between items-center px-6 mb-8">
               <Text className={`text-3xl font-black ${textColor} tracking-tighter uppercase`}>
-                {activeModal === 'dados' ? 'Meus Dados' : activeModal === 'historico' ? 'Histórico' : 'Ajustes'}
+                {activeModal === 'dados' ? (isEditing ? 'Editar Perfil' : 'Meus Dados') : activeModal === 'historico' ? 'Histórico' : 'Ajustes'}
               </Text>
-              <TouchableOpacity onPress={() => setActiveModal(null)} className={`w-10 h-10 ${isDarkMode ? 'bg-white/10' : 'bg-gray-50'} rounded-full items-center justify-center`}>
+              <TouchableOpacity onPress={() => { setActiveModal(null); setIsEditing(false); }} className={`w-10 h-10 ${isDarkMode ? 'bg-white/10' : 'bg-gray-50'} rounded-full items-center justify-center`}>
                 <X size={20} color={isDarkMode ? 'white' : '#111827'} />
               </TouchableOpacity>
             </View>

@@ -15,9 +15,10 @@ class Usuario(models.Model):
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=255)  
     tipo_perfil = models.CharField(max_length=10, choices=PERFIL_CHOICES)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        # Hash a senha apenas se ela não estiver no formato de hash do Django
+        
         if self.senha and not self.senha.startswith('pbkdf2_sha256$'):
             self.senha = make_password(self.senha)
         super().save(*args, **kwargs)
