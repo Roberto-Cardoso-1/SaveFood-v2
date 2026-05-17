@@ -37,11 +37,18 @@ const LoginScreen = () => {
 
       if (response.status === 200) {
         const userData = response.data;
+        
+        // Tratar URL do avatar (se vier do Django, pode vir apenas o path)
+        let avatarUrl = userData.avatar;
+        if (avatarUrl && !avatarUrl.startsWith('http')) {
+          avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
+        }
+
         setUser({
           id: userData.id,
           name: userData.nome,
           email: userData.email,
-          avatar: userData.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          avatar: avatarUrl || undefined,
           tipo_perfil: userData.tipo_perfil,
         });
       }

@@ -67,35 +67,66 @@ const ProfileScreen = () => {
   };
 
   const handleSaveProfile = async () => {
+    console.log('Botão Salvar pressionado');
+    
     if (!tempName) {
       Alert.alert('Erro', 'O nome não pode estar vazio.');
       return;
     }
 
     if (!user?.id) {
+      console.error('Erro: user.id não encontrado', user);
       Alert.alert(
         'Sessão expirada', 
-        'Para sua segurança, por favor saia da conta e entre novamente para atualizar seu perfil.'
+        'Por favor, saia da conta e entre novamente para que possamos sincronizar seu ID de usuário.'
       );
       return;
     }
 
     setLoading(true);
     try {
-      console.log(`Tentando atualizar usuário ${user.id}...`);
+      console.log(`Tentando atualizar usuário ID ${user.id}...`);
       
-      const response = await api.patch(`usuarios/${user.id}/`, {
-        nome: tempName,
+      const formData = new FormData();
+      formData.append('nome', tempName);
+      
+      if (tempAvatar && !tempAvatar.startsWith('http')) {
+        // Se for uma URI local (da galeria), anexamos o arquivo
+        const uriParts = tempAvatar.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        
+        formData.append('avatar', {
+          uri: tempAvatar,
+          name: `avatar.${fileType}`,
+          type: `image/${fileType}`,
+        } as any);
+      } else if (tempAvatar === null) {
+        // Se foi removido, enviamos vazio ou indicamos remoção (depende da API, aqui o Django aceita vazio)
+        formData.append('avatar', '');
+      }
+
+      const response = await api.patch(`usuarios/${user.id}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (response.status === 200) {
-        updateUser({ name: tempName, avatar: tempAvatar || undefined });
+      console.log('Resposta do servidor:', response.status);
+
+      if (response.status === 200 || response.status === 204) {
+        // O backend retorna a URL completa do avatar
+        const updatedUser = response.data;
+        updateUser({ 
+          name: updatedUser.nome, 
+          avatar: updatedUser.avatar || undefined 
+        });
         setIsEditing(false);
-        Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+        Alert.alert('Sucesso', 'Seu perfil foi atualizado e salvo permanentemente!');
       }
     } catch (err: any) {
-      console.error('Erro detalhado ao atualizar perfil:', err.response?.data || err.message);
-      Alert.alert('Erro', 'Não foi possível salvar as alterações no servidor.');
+      console.error('Erro ao salvar perfil:', err.response?.data || err.message);
+      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+      Alert.alert('Erro no Servidor', `Não foi possível salvar: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
