@@ -72,20 +72,30 @@ const ProfileScreen = () => {
       return;
     }
 
+    if (!user?.id) {
+      Alert.alert(
+        'Sessão expirada', 
+        'Para sua segurança, por favor saia da conta e entre novamente para atualizar seu perfil.'
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      // Nota: Em um ambiente real com backend, enviaríamos o avatar como FormData
-      // Para fins de demonstração e persistência local no Store:
-      await api.patch(`usuarios/${user?.id}/`, {
+      console.log(`Tentando atualizar usuário ${user.id}...`);
+      
+      const response = await api.patch(`usuarios/${user.id}/`, {
         nome: tempName,
       });
 
-      updateUser({ name: tempName, avatar: tempAvatar || undefined });
-      setIsEditing(false);
-      Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao atualizar perfil:', err);
-      Alert.alert('Erro', 'Não foi possível atualizar o perfil no servidor.');
+      if (response.status === 200) {
+        updateUser({ name: tempName, avatar: tempAvatar || undefined });
+        setIsEditing(false);
+        Alert.alert('Sucesso', 'Perfil atualizado com sucesso!');
+      }
+    } catch (err: any) {
+      console.error('Erro detalhado ao atualizar perfil:', err.response?.data || err.message);
+      Alert.alert('Erro', 'Não foi possível salvar as alterações no servidor.');
     } finally {
       setLoading(false);
     }
