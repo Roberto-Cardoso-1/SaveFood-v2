@@ -16,13 +16,21 @@ const CATEGORIES = ['Padaria', 'Frutas', 'Refeições', 'Doces', 'Laticínios'];
 
 const DonateScreen = () => {
   const navigation = useNavigation<any>();
-  const addDonation = useAppStore((state) => state.addDonation);
+  const { addDonation, isDarkMode } = useAppStore();
   const [titulo, setTitulo] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [categoria, setCategoria] = useState('Padaria');
   const [error, setError] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(false);
   const [image, setImage] = useState<string | null>(null);
+
+  // Theme-aware styles
+  const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
+  const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
+  const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
+  const cardColor = isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50';
+  const borderColor = isDarkMode ? 'border-[#334155]' : 'border-gray-100';
+  const labelColor = isDarkMode ? 'text-gray-300' : 'text-gray-800';
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -89,9 +97,9 @@ const DonateScreen = () => {
   };
 
   return (
-    <StyledSafeAreaView className="flex-1 bg-white">
+    <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
       <View className="px-6 py-4 flex-row justify-between items-center">
-        <Text className="text-2xl font-black text-gray-900 tracking-tighter">Nova Doação</Text>
+        <Text className={`text-2xl font-black ${textColor} tracking-tighter`}>Nova Doação</Text>
         <TouchableOpacity onPress={() => { setTitulo(''); setQuantidade(''); setError(null); setImage(null); }}>
           <Text className="text-green-600 font-bold text-sm">Limpar</Text>
         </TouchableOpacity>
@@ -100,17 +108,17 @@ const DonateScreen = () => {
       <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         <TouchableOpacity 
           onPress={pickImage}
-          className="w-full h-56 border-2 border-dashed border-gray-100 rounded-[32px] items-center justify-center bg-gray-50 mb-8 mt-4 overflow-hidden"
+          className={`w-full h-56 border-2 border-dashed ${borderColor} rounded-[32px] items-center justify-center ${cardColor} mb-8 mt-4 overflow-hidden`}
         >
           {image ? (
             <RNImage source={{ uri: image }} className="w-full h-full" />
           ) : (
             <>
-              <View className="w-16 h-16 bg-white rounded-2xl items-center justify-center shadow-sm mb-3">
+              <View className={`w-16 h-16 ${isDarkMode ? 'bg-[#334155]' : 'bg-white'} rounded-2xl items-center justify-center shadow-sm mb-3`}>
                 <Camera size={32} color="#10B981" />
               </View>
-              <Text className="text-gray-900 font-black text-base tracking-tight">Tirar foto do alimento</Text>
-              <Text className="text-gray-400 text-xs font-medium mt-1">Clique para selecionar da galeria</Text>
+              <Text className={`${textColor} font-black text-base tracking-tight`}>Tirar foto do alimento</Text>
+              <Text className={`${subTextColor} text-xs font-medium mt-1`}>Clique para selecionar da galeria</Text>
             </>
           )}
         </TouchableOpacity>
@@ -118,7 +126,7 @@ const DonateScreen = () => {
         {image && (
           <TouchableOpacity 
             onPress={takePhoto}
-            className="mb-8 self-center bg-green-50 px-6 py-2 rounded-full border border-green-100"
+            className={`mb-8 self-center ${isDarkMode ? 'bg-green-500/10' : 'bg-green-50'} px-6 py-2 rounded-full border border-green-500/20`}
           >
             <Text className="text-green-600 font-bold text-xs">TIRAR NOVA FOTO</Text>
           </TouchableOpacity>
@@ -141,18 +149,18 @@ const DonateScreen = () => {
           />
 
           <View className="mb-6">
-            <Text className="text-gray-800 mb-2 font-bold text-sm tracking-tight">Categoria</Text>
+            <Text className={`${labelColor} mb-2 font-bold text-sm tracking-tight`}>Categoria</Text>
             <TouchableOpacity 
               activeOpacity={0.7}
               onPress={() => setShowCategories(!showCategories)}
-              className="flex-row items-center bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5"
+              className={`flex-row items-center ${cardColor} border-2 ${borderColor} rounded-2xl px-4 py-3.5`}
             >
-              <Text className="flex-1 text-gray-900 font-medium">{categoria}</Text>
-              <ChevronDown size={20} color="#9CA3AF" />
+              <Text className={`flex-1 ${textColor} font-medium`}>{categoria}</Text>
+              <ChevronDown size={20} color={isDarkMode ? '#64748B' : '#9CA3AF'} />
             </TouchableOpacity>
             
             {showCategories && (
-              <View className="mt-2 bg-white border border-gray-100 rounded-2xl p-2 shadow-lg shadow-gray-200">
+              <View className={`mt-2 ${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} border ${borderColor} rounded-2xl p-2 shadow-lg ${isDarkMode ? 'shadow-black' : 'shadow-gray-200'}`}>
                 {CATEGORIES.map((cat) => (
                   <TouchableOpacity 
                     key={cat}
@@ -160,9 +168,9 @@ const DonateScreen = () => {
                       setCategoria(cat);
                       setShowCategories(false);
                     }}
-                    className="py-3 px-4 rounded-xl active:bg-green-50"
+                    className={`py-3 px-4 rounded-xl active:${isDarkMode ? 'bg-white/5' : 'bg-green-50'}`}
                   >
-                    <Text className={`font-bold ${categoria === cat ? 'text-green-600' : 'text-gray-600'}`}>{cat}</Text>
+                    <Text className={`font-bold ${categoria === cat ? 'text-green-600' : isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{cat}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -170,13 +178,13 @@ const DonateScreen = () => {
           </View>
 
           {error && (
-            <View className="flex-row items-center bg-red-50 p-4 rounded-2xl my-2 border border-red-100">
+            <View className={`flex-row items-center ${isDarkMode ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'} p-4 rounded-2xl my-2 border`}>
               <AlertCircle size={20} color="#EF4444" />
               <Text className="text-red-600 ml-3 font-semibold text-sm flex-1">{error}</Text>
             </View>
           )}
 
-          <View className="shadow-2xl shadow-green-200">
+          <View className={`shadow-2xl ${isDarkMode ? 'shadow-black' : 'shadow-green-200'}`}>
             <Button 
               title="Publicar Doação" 
               onPress={handleDonate} 

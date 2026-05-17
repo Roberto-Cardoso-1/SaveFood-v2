@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, TouchableOpacityProps, ActivityIndicator, View } from 'react-native';
+import { useAppStore } from '../store/useAppStore';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -13,16 +14,18 @@ export const Button: React.FC<ButtonProps> = ({
   loading = false, 
   ...props 
 }) => {
+  const isDarkMode = useAppStore((state) => state.isDarkMode);
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
         return 'bg-green-500 active:bg-green-600';
       case 'secondary':
-        return 'bg-gray-100 active:bg-gray-200';
+        return isDarkMode ? 'bg-[#334155] active:bg-[#475569]' : 'bg-gray-100 active:bg-gray-200';
       case 'outline':
-        return 'bg-white border-2 border-gray-100 active:bg-gray-50';
+        return `bg-transparent border-2 ${isDarkMode ? 'border-[#334155]' : 'border-gray-100'} active:${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`;
       case 'ghost':
-        return 'bg-transparent active:bg-gray-50';
+        return `bg-transparent active:${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`;
       default:
         return 'bg-green-500 active:bg-green-600';
     }
@@ -34,11 +37,11 @@ export const Button: React.FC<ButtonProps> = ({
         return 'text-white';
       case 'outline':
       case 'ghost':
-        return 'text-gray-700';
+        return isDarkMode ? 'text-gray-300' : 'text-gray-700';
       case 'secondary':
-        return 'text-gray-900';
+        return isDarkMode ? 'text-white' : 'text-gray-900';
       default:
-        return 'text-gray-900';
+        return isDarkMode ? 'text-white' : 'text-gray-900';
     }
   };
 
