@@ -18,6 +18,15 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def atualizar_perfil(self, request, pk=None):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['post'])
     def login(self, request):
         email = request.data.get('email')
@@ -37,8 +46,6 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         email = request.data.get('email')
         try:
             usuario = Usuario.objects.get(email=email)
-            # Em um sistema real, aqui dispararíamos um e-mail com token.
-            # Para fins de demonstração, retornaremos sucesso.
             return Response({'status': 'Instruções de recuperação enviadas para o e-mail informado.'}, status=status.HTTP_200_OK)
         except Usuario.DoesNotExist:
             return Response({'error': 'E-mail não encontrado em nossa base de dados.'}, status=status.HTTP_404_NOT_FOUND)

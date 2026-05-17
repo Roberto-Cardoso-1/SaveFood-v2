@@ -31,11 +31,9 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // Form States
   const [tempName, setTempName] = useState(user?.name || '');
   const [tempAvatar, setTempAvatar] = useState(user?.avatar || null);
 
-  // Settings States
   const [pushEnabled, setPushEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(true);
 
@@ -73,53 +71,57 @@ const ProfileScreen = () => {
     }
 
     if (!user?.id) {
-      Alert.alert('Sessão expirada', 'Faça login novamente.');
+      Alert.alert('Erro', 'Sessão expirada. Entre novamente.');
       return;
     }
 
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('nome', tempName);
+      
       const isNewLocalImage = tempAvatar && !tempAvatar.startsWith('http');
-      let response;
 
       if (isNewLocalImage) {
-        const formData = new FormData();
-        formData.append('nome', tempName);
-        
         const uriParts = tempAvatar!.split('.');
         const fileType = uriParts[uriParts.length - 1];
-        const fileName = tempAvatar!.split('/').pop();
+        const fileName = `avatar_${Date.now()}.${fileType}`;
         
         formData.append('avatar', {
-          uri: Platform.OS === 'ios' ? tempAvatar!.replace('file://', '') : tempAvatar,
-          name: fileName || `avatar.${fileType}`,
+          uri: tempAvatar,
+          name: fileName,
           type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
         } as any);
-
-        response = await api.patch(`usuarios/${user.id}/`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-      } else {
-        const payload: any = { nome: tempName };
-        if (tempAvatar === null) payload.avatar = null;
-
-        response = await api.patch(`usuarios/${user.id}/`, payload);
+      } else if (tempAvatar === null) {
+        formData.append('avatar', '');
       }
 
-      if (response.status === 200 || response.status === 204 || response.status === 201) {
+      // Usando POST com ação dedicada para maior compatibilidade com Multipart
+      const response = await api.post(`usuarios/${user.id}/atualizar_perfil/`, formData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+
+      if (response.status === 200 || response.status === 201) {
         const updatedUser = response.data;
         let avatarUrl = updatedUser.avatar;
         if (avatarUrl && !avatarUrl.startsWith('http')) {
           avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
         }
 
-        updateUser({ name: updatedUser.nome, avatar: avatarUrl || undefined });
+        updateUser({ 
+          name: updatedUser.nome, 
+          avatar: avatarUrl || undefined 
+        });
+        
         setIsEditing(false);
-        Alert.alert('Sucesso', 'Perfil atualizado!');
+        Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
       }
     } catch (err: any) {
-      console.error('Erro ao salvar:', err.response?.data || err.message);
-      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+      console.error('Erro ao salvar perfil:', err.response?.data || err.message);
+      Alert.alert('Erro', 'Falha ao salvar. Verifique sua conexão.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,6 @@ const ProfileScreen = () => {
     return parts[0][0].toUpperCase();
   };
 
-  // Theme-aware styles
   const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
   const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
   const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
@@ -149,7 +150,6 @@ const ProfileScreen = () => {
             <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
               {isEditing ? (
                 <View className="space-y-6">
-                  {/* Edit Avatar */}
                   <View className="items-center mb-8">
                     <View className="relative">
                       {tempAvatar ? (
@@ -275,13 +275,6 @@ const ProfileScreen = () => {
                 <ChevronRight size={20} color={isDarkMode ? '#475569' : '#D1D5DB'} />
               </View>
             </View>
-            <View className={`${isDarkMode ? 'bg-blue-500/10 border-blue-500/20' : 'bg-blue-50 border-blue-100'} p-6 rounded-[32px] border flex-row items-center`}>
-              <HelpCircle size={24} color="#3B82F6" />
-              <View className="ml-4 flex-1">
-                <Text className={`${isDarkMode ? 'text-blue-400' : 'text-blue-900'} font-bold`}>Central de Ajuda</Text>
-                <Text className={`${isDarkMode ? 'text-blue-400/60' : 'text-blue-600'} text-xs`}>Precisa de suporte?</Text>
-              </View>
-            </View>
           </View>
         );
       default:
@@ -311,26 +304,18 @@ const ProfileScreen = () => {
         <View className="items-center py-8 px-6">
           <View className="relative">
             {user?.avatar ? (
-              <Image
-                source={{ uri: user.avatar }}
-                className="w-32 h-32 rounded-full border-4 border-green-500/20"
-              />
+              <Image source={{ uri: user.avatar }} className="w-32 h-32 rounded-full border-4 border-green-500/20" />
             ) : (
               <View className="w-32 h-32 rounded-full bg-green-500 items-center justify-center border-4 border-green-500/20">
                 <Text className="text-white text-4xl font-black">{getInitials(user?.name || '')}</Text>
               </View>
             )}
-            <View className="absolute bottom-1 right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white items-center justify-center">
-              <View className="w-2 h-2 bg-white rounded-full" />
-            </View>
+            <View className="absolute bottom-1 right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white items-center justify-center" />
           </View>
           <Text className={`text-2xl font-black ${textColor} mt-4 tracking-tighter`}>{user?.name || 'Usuário'}</Text>
           <Text className={`${subTextColor} font-bold text-xs uppercase tracking-widest mt-1`}>{user?.email}</Text>
-          
-          <View className="bg-green-500/10 px-4 py-1.5 rounded-full mt-4 flex-row items-center border border-green-500/20">
-            <Text className="text-green-600 font-black text-[10px] uppercase tracking-wider">
-              Perfil {user?.tipo_perfil || 'Doador'}
-            </Text>
+          <View className="bg-green-500/10 px-4 py-1.5 rounded-full mt-4 border border-green-500/20">
+            <Text className="text-green-600 font-black text-[10px] uppercase tracking-wider">Perfil {user?.tipo_perfil || 'Doador'}</Text>
           </View>
         </View>
 
@@ -354,14 +339,7 @@ const ProfileScreen = () => {
           <MenuItem icon={User} label="Meus Dados" isDarkMode={isDarkMode} onPress={() => setActiveModal('dados')} />
           <MenuItem icon={Clock} label="Histórico de Coletas" isDarkMode={isDarkMode} onPress={() => setActiveModal('historico')} />
           <MenuItem icon={Settings} label="Configurações" isDarkMode={isDarkMode} onPress={() => setActiveModal('config')} />
-          <MenuItem 
-            icon={LogOut} 
-            label="Sair da Conta" 
-            isDarkMode={isDarkMode}
-            isLast 
-            danger 
-            onPress={logout}
-          />
+          <MenuItem icon={LogOut} label="Sair da Conta" isDarkMode={isDarkMode} isLast danger onPress={logout} />
         </View>
       </ScrollView>
       <BottomTabBar activeTab="Perfil" />
