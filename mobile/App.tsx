@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NativeWindStyleSheet } from 'nativewind';
 import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import './global.css';
 
 import LoginScreen from './src/screens/LoginScreen';
@@ -48,33 +49,35 @@ export default function App() {
   const user = useAppStore((state) => state.user);
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator 
-          screenOptions={{
-            headerShown: false,
-            contentStyle: Platform.OS === 'web' ? { flex: 1, height: '100%' } : undefined
-          }}
-        >
-          {user === null ? (
-            <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="Main" component={TabNavigator} />
-              <Stack.Screen 
-                name="Confirmation" 
-                component={ConfirmationScreen} 
-                options={{ presentation: 'modal' }}
-              />
-            </>
-          )}
-        </Stack.Navigator>
-        <StatusBar style="auto" />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator 
+            screenOptions={{ 
+              headerShown: false,
+              contentStyle: Platform.OS === 'web' ? { flex: 1, height: '100%' } : undefined
+            }}
+          >
+            {user === null ? (
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+              </>
+            ) : (
+              <>
+                <Stack.Screen name="Main" component={TabNavigator} />
+                <Stack.Screen 
+                  name="Confirmation" 
+                  component={ConfirmationScreen} 
+                  options={{ presentation: 'modal' }}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
