@@ -85,48 +85,59 @@ const ProfileScreen = () => {
 
     setLoading(true);
     try {
-      console.log(`Tentando atualizar usuário ID ${user.id}...`);
+      console.log(`[SaveProfile] Iniciando atualização para o usuário ${user.id}...`);
       
       const formData = new FormData();
       formData.append('nome', tempName);
       
       if (tempAvatar && !tempAvatar.startsWith('http')) {
-        // Se for uma URI local (da galeria), anexamos o arquivo
+        console.log('[SaveProfile] Detectada nova imagem local:', tempAvatar);
         const uriParts = tempAvatar.split('.');
         const fileType = uriParts[uriParts.length - 1];
+        const fileName = tempAvatar.split('/').pop();
         
         formData.append('avatar', {
           uri: tempAvatar,
-          name: `avatar.${fileType}`,
-          type: `image/${fileType}`,
+          name: fileName || `avatar.${fileType}`,
+          type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
         } as any);
       } else if (tempAvatar === null) {
-        // Se foi removido, enviamos vazio ou indicamos remoção (depende da API, aqui o Django aceita vazio)
+        console.log('[SaveProfile] Removendo imagem de perfil');
         formData.append('avatar', '');
       }
 
+      console.log('[SaveProfile] Enviando PATCH para o servidor...');
       const response = await api.patch(`usuarios/${user.id}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 10000 
       });
 
-      console.log('Resposta do servidor:', response.status);
+      console.log('[SaveProfile] Resposta recebida:', response.status);
 
-      if (response.status === 200 || response.status === 204) {
-        // O backend retorna a URL completa do avatar
+      if (response.status === 200 || response.status === 204 || response.status === 201) {
         const updatedUser = response.data;
+        
+        let avatarUrl = updatedUser.avatar;
+        if (avatarUrl && !avatarUrl.startsWith('http')) {
+          avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
+        }
+
         updateUser({ 
           name: updatedUser.nome, 
-          avatar: updatedUser.avatar || undefined 
+          avatar: avatarUrl || undefined 
         });
+        
         setIsEditing(false);
-        Alert.alert('Sucesso', 'Seu perfil foi atualizado e salvo permanentemente!');
+        Alert.alert('Sucesso', 'Seu perfil foi atualizado permanentemente!');
       }
     } catch (err: any) {
-      console.error('Erro ao salvar perfil:', err.response?.data || err.message);
-      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-      Alert.alert('Erro no Servidor', `Não foi possível salvar: ${errorMsg}`);
+      console.error('[SaveProfile] Erro ao salvar:', err.response?.data || err.message);
+      let msg = 'Não foi possível salvar as alterações.';
+      if (err.message === 'Network Error') msg = 'Erro de conexão. O servidor está ligado?';
+      
+      Alert.alert('Erro', msg);
     } finally {
       setLoading(false);
     }
