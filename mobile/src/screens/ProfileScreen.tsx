@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Switch, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Switch, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MapPin, ShoppingBag, Leaf, User, Clock, Settings, LogOut, ChevronRight, X, Shield, Bell, HelpCircle, Camera, Trash2 } from 'lucide-react-native';
 import { BottomTabBar } from '../components/BottomTabBar';
@@ -67,77 +67,59 @@ const ProfileScreen = () => {
   };
 
   const handleSaveProfile = async () => {
-    console.log('Botão Salvar pressionado');
-    
     if (!tempName) {
       Alert.alert('Erro', 'O nome não pode estar vazio.');
       return;
     }
 
     if (!user?.id) {
-      console.error('Erro: user.id não encontrado', user);
-      Alert.alert(
-        'Sessão expirada', 
-        'Por favor, saia da conta e entre novamente para que possamos sincronizar seu ID de usuário.'
-      );
+      Alert.alert('Sessão expirada', 'Faça login novamente.');
       return;
     }
 
     setLoading(true);
     try {
-      console.log(`[SaveProfile] Iniciando atualização para o usuário ${user.id}...`);
-      
-      const formData = new FormData();
-      formData.append('nome', tempName);
-      
-      if (tempAvatar && !tempAvatar.startsWith('http')) {
-        console.log('[SaveProfile] Detectada nova imagem local:', tempAvatar);
-        const uriParts = tempAvatar.split('.');
+      const isNewLocalImage = tempAvatar && !tempAvatar.startsWith('http');
+      let response;
+
+      if (isNewLocalImage) {
+        const formData = new FormData();
+        formData.append('nome', tempName);
+        
+        const uriParts = tempAvatar!.split('.');
         const fileType = uriParts[uriParts.length - 1];
-        const fileName = tempAvatar.split('/').pop();
+        const fileName = tempAvatar!.split('/').pop();
         
         formData.append('avatar', {
-          uri: tempAvatar,
+          uri: Platform.OS === 'ios' ? tempAvatar!.replace('file://', '') : tempAvatar,
           name: fileName || `avatar.${fileType}`,
           type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
         } as any);
-      } else if (tempAvatar === null) {
-        console.log('[SaveProfile] Removendo imagem de perfil');
-        formData.append('avatar', '');
+
+        response = await api.patch(`usuarios/${user.id}/`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        const payload: any = { nome: tempName };
+        if (tempAvatar === null) payload.avatar = null;
+
+        response = await api.patch(`usuarios/${user.id}/`, payload);
       }
-
-      console.log('[SaveProfile] Enviando PATCH para o servidor...');
-      const response = await api.patch(`usuarios/${user.id}/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 10000 
-      });
-
-      console.log('[SaveProfile] Resposta recebida:', response.status);
 
       if (response.status === 200 || response.status === 204 || response.status === 201) {
         const updatedUser = response.data;
-        
         let avatarUrl = updatedUser.avatar;
         if (avatarUrl && !avatarUrl.startsWith('http')) {
           avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
         }
 
-        updateUser({ 
-          name: updatedUser.nome, 
-          avatar: avatarUrl || undefined 
-        });
-        
+        updateUser({ name: updatedUser.nome, avatar: avatarUrl || undefined });
         setIsEditing(false);
-        Alert.alert('Sucesso', 'Seu perfil foi atualizado permanentemente!');
+        Alert.alert('Sucesso', 'Perfil atualizado!');
       }
     } catch (err: any) {
-      console.error('[SaveProfile] Erro ao salvar:', err.response?.data || err.message);
-      let msg = 'Não foi possível salvar as alterações.';
-      if (err.message === 'Network Error') msg = 'Erro de conexão. O servidor está ligado?';
-      
-      Alert.alert('Erro', msg);
+      console.error('Erro ao salvar:', err.response?.data || err.message);
+      Alert.alert('Erro', 'Não foi possível salvar as alterações.');
     } finally {
       setLoading(false);
     }
@@ -309,7 +291,6 @@ const ProfileScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
-      {/* Detail Modal */}
       <Modal visible={!!activeModal} animationType="slide" transparent={true}>
         <View className="flex-1 bg-black/50 justify-end">
           <View className={`${isDarkMode ? 'bg-[#0F172A]' : 'bg-white'} rounded-t-[40px] h-[85%] pt-8`}>
