@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, Leaf, AlertCircle, Moon, Sun } from 'lucide-react-native';
+import { Mail, Lock, Leaf, AlertCircle, Moon, Sun, Sparkles } from 'lucide-react-native';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
 import { styled } from 'nativewind';
 import { useNavigation } from '@react-navigation/native';
+import api from '../services/api';
 
 const StyledSafeAreaView = styled(SafeAreaView);
-
-import api from '../services/api';
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
@@ -20,6 +19,8 @@ const LoginScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [userName, setUserName] = useState('');
 
   const handleLogin = async () => {
     setError(null);
@@ -38,12 +39,15 @@ const LoginScreen = () => {
       if (response.status === 200) {
         const userData = response.data;
         
-        // Tratar URL do avatar (se vier do Django, pode vir apenas o path)
         let avatarUrl = userData.avatar;
         if (avatarUrl && !avatarUrl.startsWith('http')) {
           avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
         }
 
+        setUserName(userData.nome);
+        setShowWelcomeModal(true);
+        
+        // Armazenamos o usuário mas mantemos o modal aberto
         setUser({
           id: userData.id,
           name: userData.nome,
@@ -64,7 +68,6 @@ const LoginScreen = () => {
   };
 
   const handleGoogleLogin = () => {
-    console.log('Tentativa de login com Google');
     setLoadingGoogle(true);
     setTimeout(() => {
       socialLogin('Google');
@@ -72,7 +75,6 @@ const LoginScreen = () => {
     }, 1500);
   };
 
-  // Theme-aware styles
   const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
   const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
   const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
@@ -80,7 +82,35 @@ const LoginScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
-      {/* 🌓 Theme Toggle - Top Right */}
+      {/* 🌟 Welcome Modal */}
+      <Modal visible={showWelcomeModal} animationType="fade" transparent={true}>
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View className={`${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} w-full rounded-[48px] p-8 items-center border ${isDarkMode ? 'border-white/10' : 'border-green-50'} shadow-2xl`}>
+            <View className="w-24 h-24 bg-green-500 rounded-[32px] items-center justify-center shadow-xl shadow-green-500/20 rotate-12 mb-8">
+              <View className="-rotate-12">
+                <Sparkles size={48} color="white" fill="white" />
+              </View>
+            </View>
+            
+            <Text className={`text-3xl font-black ${textColor} text-center tracking-tighter leading-tight`}>
+              Que bom ver você de volta, {userName.split(' ')[0]}! 🍎
+            </Text>
+            
+            <Text className={`${subTextColor} text-center text-base mt-4 px-2 leading-6`}>
+              Estamos felizes em tê-lo novamente na nossa missão de salvar alimentos.
+            </Text>
+
+            <TouchableOpacity 
+              onPress={() => setShowWelcomeModal(false)}
+              className="w-full bg-green-500 py-5 rounded-[24px] items-center shadow-lg shadow-green-500/30 mt-10"
+            >
+              <Text className="text-white font-black text-lg uppercase tracking-widest">VAMOS LÁ</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 🌓 Theme Toggle */}
       <View className="absolute top-12 right-6 z-50">
         <TouchableOpacity 
           onPress={toggleDarkMode}
@@ -92,10 +122,6 @@ const LoginScreen = () => {
 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="px-6" showsVerticalScrollIndicator={false}>
         <View className="flex-1 justify-center py-12">
-          {/* Decorative Background */}
-          <View className={`absolute -top-24 -right-24 w-64 h-64 ${isDarkMode ? 'bg-green-500/5' : 'bg-green-50'} rounded-full opacity-50`} />
-          
-          {/* Logo Section */}
           <View className="items-center mb-10">
             <View className="relative">
               <View className={`absolute -inset-4 ${isDarkMode ? 'bg-green-500/10' : 'bg-green-100/50'} rounded-[40px] rotate-6`} />
@@ -112,7 +138,6 @@ const LoginScreen = () => {
             </Text>
           </View>
 
-          {/* Form Section */}
           <View className={`w-full ${isDarkMode ? 'bg-transparent' : 'bg-white'} rounded-[40px] p-2`}>
             <View className="space-y-4">
               <Input
@@ -143,17 +168,12 @@ const LoginScreen = () => {
                 <View className="w-10 h-10 bg-red-100/20 rounded-full items-center justify-center mr-4">
                   <AlertCircle size={20} color="#EF4444" />
                 </View>
-                <Text className="text-red-500 font-bold text-sm flex-1 leading-tight">
-                  {error}
-                </Text>
+                <Text className="text-red-500 font-bold text-sm flex-1 leading-tight">{error}</Text>
               </View>
             )}
 
             <View className="shadow-2xl shadow-green-500/10">
-              <Button 
-                title="Entrar" 
-                onPress={handleLogin} 
-              />
+              <Button title="Entrar" loading={loading} onPress={handleLogin} />
             </View>
 
             <View className="flex-row items-center my-10">
@@ -162,7 +182,6 @@ const LoginScreen = () => {
               <View className={`flex-1 h-[1.5px] ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`} />
             </View>
 
-            {/* Centered Google Button */}
             <View className="items-center">
               <TouchableOpacity 
                 disabled={loadingGoogle}
