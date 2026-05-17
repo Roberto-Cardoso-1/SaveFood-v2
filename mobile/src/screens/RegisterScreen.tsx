@@ -14,7 +14,7 @@ const StyledSafeAreaView = styled(SafeAreaView);
 
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
-  const { registerUser, isDarkMode } = useAppStore();
+  const { setUser, isDarkMode } = useAppStore();
   const [objective, setObjective] = useState<'doador' | 'receptor' | null>(null);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -69,7 +69,8 @@ const RegisterScreen = () => {
       });
 
       if (response.status === 201) {
-        registerUser({
+        setUser({
+          id: response.data.id,
           name: nome,
           email: email,
           avatar: avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',

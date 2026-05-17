@@ -10,22 +10,50 @@ import { useNavigation } from '@react-navigation/native';
 
 const StyledSafeAreaView = styled(SafeAreaView);
 
+import api from '../services/api';
+
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
-  const { login, socialLogin, isDarkMode, toggleDarkMode } = useAppStore();
+  const { setUser, socialLogin, isDarkMode, toggleDarkMode } = useAppStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
 
-  const handleLogin = () => {
-    console.log('Tentativa de login com:', email);
+  const handleLogin = async () => {
     setError(null);
     if (!email || !password) {
       setError('Por favor, preencha todos os campos para entrar.');
       return;
     }
-    login(email);
+
+    setLoading(true);
+    try {
+      const response = await api.post('usuarios/login/', {
+        email,
+        senha: password,
+      });
+
+      if (response.status === 200) {
+        const userData = response.data;
+        setUser({
+          id: userData.id,
+          name: userData.nome,
+          email: userData.email,
+          avatar: userData.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          tipo_perfil: userData.tipo_perfil,
+        });
+      }
+    } catch (err: any) {
+      console.error('Erro ao fazer login:', err.response?.data || err.message);
+      const msg = err.response?.status === 401 ? 'E-mail ou senha incorretos.' : 
+                  err.response?.status === 404 ? 'Usuário não encontrado.' :
+                  'Ocorreu um erro ao tentar entrar. Tente novamente.';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {

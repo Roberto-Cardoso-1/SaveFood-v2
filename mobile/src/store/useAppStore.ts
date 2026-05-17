@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import api from '../services/api';
 
 export interface User {
+  id?: number;
   name: string;
   email: string;
   avatar?: string;
@@ -84,9 +86,8 @@ interface AppState {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   setLocalizacao: (local: string) => void;
-  login: (email: string) => void;
+  setUser: (user: User | null) => void;
   socialLogin: (provider: string) => void;
-  registerUser: (userData: User) => void;
   logout: () => void;
   addDonation: (item: Omit<Donation, 'id' | 'estabelecimento' | 'distancia' | 'tempoExpiracao'>) => void;
   removeDonation: (id: string) => void;
@@ -190,13 +191,10 @@ export const useAppStore = create<AppState>((set) => ({
   ],
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
   setLocalizacao: (local) => set({ localizacao: local }),
-  login: (email: string) => 
-    set({ user: { name: 'João Silva', email, avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400' } }),
+  setUser: (user) => set({ user }),
   socialLogin: (provider: string) => 
     set({ user: { name: `Usuário ${provider}`, email: `${provider.toLowerCase()}@teste.com`, avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400' } }),
-  registerUser: (userData) => set({ user: userData }),
-  logout: () => 
-    set({ user: null }),
+  logout: () => set({ user: null }),
   addDonation: (item) => 
     set((state) => ({
       donations: [
