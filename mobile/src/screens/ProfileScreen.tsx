@@ -83,20 +83,29 @@ const ProfileScreen = () => {
       const isNewLocalImage = tempAvatar && !tempAvatar.startsWith('http');
 
       if (isNewLocalImage) {
-        const uriParts = tempAvatar!.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-        const fileName = `avatar_${Date.now()}.${fileType}`;
-        
-        formData.append('avatar', {
-          uri: tempAvatar,
-          name: fileName,
-          type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
-        } as any);
+        if (Platform.OS === 'web') {
+          // No PC (Browser), precisamos converter a URI para um Blob real
+          const response = await fetch(tempAvatar!);
+          const blob = await response.blob();
+          const uriParts = tempAvatar!.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          formData.append('avatar', blob, `avatar_${Date.now()}.${fileType}`);
+        } else {
+          // No Celular (Android/iOS), usamos o objeto específico do React Native
+          const uriParts = tempAvatar!.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          const fileName = `avatar_${Date.now()}.${fileType}`;
+          
+          formData.append('avatar', {
+            uri: tempAvatar,
+            name: fileName,
+            type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
+          } as any);
+        }
       } else if (tempAvatar === null) {
         formData.append('avatar', '');
       }
 
-      // Usando POST com ação dedicada para maior compatibilidade com Multipart
       const response = await api.post(`usuarios/${user.id}/atualizar_perfil/`, formData, {
         headers: {
           'Accept': 'application/json',
