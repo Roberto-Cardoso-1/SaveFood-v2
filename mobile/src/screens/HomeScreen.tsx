@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, Bell, Search, Store, Heart, ChevronDown, X, ChevronRight, Trash2, Trophy, Medal, Star, Leaf, Users, Sparkles, MessageCircle, Clock, Moon, Sun, Filter } from 'lucide-react-native';
+import { MapPin, Bell, Search, Store, Heart, ChevronDown, X, ChevronRight, Trash2, Trophy, Medal, Star, Leaf, Users, Sparkles, MessageCircle, Clock, Moon, Sun, Filter, ShoppingBag, Box } from 'lucide-react-native';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { useAppStore, BRAZIL_LOCATIONS } from '../store/useAppStore';
 import { styled } from 'nativewind';
-import { MotiView, AnimatePresence } from 'moti';
 
 const StyledSafeAreaView = styled(SafeAreaView);
 
@@ -17,8 +16,6 @@ const CATEGORIES = [
   { name: 'Doces', icon: Star },
   { name: 'Laticínios', icon: Box },
 ];
-
-import { ShoppingBag, Box } from 'lucide-react-native';
 
 const RANKING_DATA = [
   { id: 1, name: 'Ana Oliveira', points: 2450, saves: 42, co2: '12.5kg' },
@@ -35,54 +32,47 @@ const NOTIFICATIONS = [
   { id: 4, title: 'Alimento Reservado', message: 'Alguém reservou sua doação de Maçãs.', time: 'Yesterday', type: 'msg', icon: MessageCircle },
 ];
 
-const FoodCard = ({ item, index, isDarkMode, cardColor, borderColor, textColor, subTextColor, onDelete }: any) => {
+const FoodCard = ({ item, isDarkMode, cardColor, borderColor, textColor, subTextColor, onDelete }: any) => {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <MotiView
-      from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-      animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{ type: 'timing', duration: 500, delay: index * 100 }}
-      className="w-[48%] mb-8"
-    >
-      <TouchableOpacity activeOpacity={0.9}>
-        <View className={`${cardColor} rounded-[32px] overflow-hidden shadow-2xl shadow-black/5 border ${borderColor}`}>
-          <View className="relative">
-            <View className={`w-full h-40 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'} items-center justify-center overflow-hidden`}>
-              <ActivityIndicator color="#10B981" style={{ position: 'absolute' }} />
-              <Image source={{ uri: item.imagem }} className="w-full h-full" resizeMode="cover" />
-            </View>
-            <View className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
-              <Text className="text-gray-900 text-[9px] font-black uppercase tracking-tighter">Expira {item.tempoExpiracao}</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={() => setIsLiked(!isLiked)}
-              className="absolute top-3 right-3 w-8 h-8 bg-black/20 backdrop-blur-md rounded-full items-center justify-center"
-            >
-              <Heart size={14} color={isLiked ? '#EF4444' : 'white'} fill={isLiked ? '#EF4444' : 'transparent'} />
-            </TouchableOpacity>
+    <TouchableOpacity activeOpacity={0.9} className="w-[48%] mb-8">
+      <View className={`${cardColor} rounded-[32px] overflow-hidden shadow-2xl shadow-black/5 border ${borderColor}`}>
+        <View className="relative">
+          <View className={`w-full h-40 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'} items-center justify-center overflow-hidden`}>
+            <ActivityIndicator color="#10B981" style={{ position: 'absolute' }} />
+            <Image source={{ uri: item.imagem }} className="w-full h-full" resizeMode="cover" />
           </View>
-          <View className="p-4">
-            <Text className={`${textColor} font-black text-[15px] mb-1 tracking-tight leading-tight`} numberOfLines={1}>{item.titulo}</Text>
-            <View className="flex-row items-center mb-3">
-              <Text className={`${subTextColor} text-[11px] font-bold`} numberOfLines={1}>{item.estabelecimento}</Text>
+          <View className="absolute top-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+            <Text className="text-gray-900 text-[9px] font-black uppercase tracking-tighter">Expira {item.tempoExpiracao}</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => setIsLiked(!isLiked)}
+            className="absolute top-3 right-3 w-8 h-8 bg-black/20 backdrop-blur-md rounded-full items-center justify-center"
+          >
+            <Heart size={14} color={isLiked ? '#EF4444' : 'white'} fill={isLiked ? '#EF4444' : 'transparent'} />
+          </TouchableOpacity>
+        </View>
+        <View className="p-4">
+          <Text className={`${textColor} font-black text-[15px] mb-1 tracking-tight leading-tight`} numberOfLines={1}>{item.titulo}</Text>
+          <View className="flex-row items-center mb-3">
+            <Text className={`${subTextColor} text-[11px] font-bold`} numberOfLines={1}>{item.estabelecimento}</Text>
+          </View>
+          <View className={`flex-row justify-between items-center pt-2 border-t ${borderColor}`}>
+            <View className="bg-green-500/10 px-2 py-1 rounded-lg">
+              <Text className="text-green-500 text-[10px] font-black uppercase">{item.distancia}</Text>
             </View>
-            <View className={`flex-row justify-between items-center pt-2 border-t ${borderColor}`}>
-              <View className="bg-green-500/10 px-2 py-1 rounded-lg">
-                <Text className="text-green-500 text-[10px] font-black uppercase">{item.distancia}</Text>
-              </View>
-              {item.estabelecimento === 'Minha Doação' ? (
-                <TouchableOpacity onPress={() => onDelete(item.id, item.titulo)} className="bg-red-500/10 p-1.5 rounded-lg">
-                  <Trash2 size={14} color="#EF4444" />
-                </TouchableOpacity>
-              ) : (
-                <View className={`w-8 h-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} rounded-full`} />
-              )}
-            </View>
+            {item.estabelecimento === 'Minha Doação' ? (
+              <TouchableOpacity onPress={() => onDelete(item.id, item.titulo)} className="bg-red-500/10 p-1.5 rounded-lg">
+                <Trash2 size={14} color="#EF4444" />
+              </TouchableOpacity>
+            ) : (
+              <View className={`w-8 h-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-100'} rounded-full`} />
+            )}
           </View>
         </View>
-      </TouchableOpacity>
-    </MotiView>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -137,7 +127,6 @@ const HomeScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
-      {/* Modals remain the same but use Moti for smoother transitions if needed */}
       {/* 📍 Location Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent={true}>
         <View className="flex-1 bg-black/50 justify-end">
@@ -202,11 +191,7 @@ const HomeScreen = () => {
             </View>
 
             <View className="flex-1 px-6 -mt-6">
-              <MotiView 
-                from={{ translateY: 50, opacity: 0 }}
-                animate={{ translateY: 0, opacity: 1 }}
-                className={`${cardColor} rounded-[32px] p-6 shadow-xl shadow-black/10 mb-6 border ${borderColor}`}
-              >
+              <View className={`${cardColor} rounded-[32px] p-6 shadow-xl shadow-black/10 mb-6 border ${borderColor}`}>
                 <View className="flex-row justify-between items-center mb-6">
                   <View className="flex-row items-center">
                     <Users size={16} color="#10B981" />
@@ -228,18 +213,12 @@ const HomeScreen = () => {
                     <Text className={`${subTextColor} text-[10px] font-bold uppercase`}>Pontos</Text>
                   </View>
                 </View>
-              </MotiView>
+              </View>
 
               <ScrollView showsVerticalScrollIndicator={false}>
                 <Text className={`${subTextColor} font-black text-[10px] uppercase tracking-widest mb-4 ml-2`}>Top 5 Colaboradores</Text>
                 {RANKING_DATA.map((item, index) => (
-                  <MotiView 
-                    key={item.id} 
-                    from={{ opacity: 0, translateX: -20 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    transition={{ delay: index * 100 }}
-                    className={`flex-row items-center ${isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50'} p-5 rounded-3xl mb-3 border ${borderColor}`}
-                  >
+                  <View key={item.id} className={`flex-row items-center ${isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50'} p-5 rounded-3xl mb-3 border ${borderColor}`}>
                     <View className="w-8 items-center mr-4">
                       {index < 3 ? (
                         <Medal size={22} color={index === 0 ? '#FBBF24' : index === 1 ? '#94A3B8' : '#B45309'} />
@@ -258,7 +237,7 @@ const HomeScreen = () => {
                       <Text className="text-green-500 font-black text-base">{item.points}</Text>
                       <Text className={`${subTextColor} text-[9px] font-bold uppercase tracking-tighter`}>pontos</Text>
                     </View>
-                  </MotiView>
+                  </View>
                 ))}
                 <View className="h-20" />
               </ScrollView>
@@ -267,19 +246,61 @@ const HomeScreen = () => {
         </View>
       </Modal>
 
-      {/* Header with Animation */}
-      <MotiView 
-        from={{ translateY: -20, opacity: 0 }}
-        animate={{ translateY: 0, opacity: 1 }}
-        className={`px-6 py-6 flex-row justify-between items-end ${bgColor}`}
-      >
+      {/* 🔔 Notifications Modal */}
+      <Modal visible={showNotificationsModal} animationType="slide" transparent={true}>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className={`${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} rounded-t-[40px] h-[70%]`}>
+            <View className={`px-6 pt-8 pb-4 flex-row justify-between items-center border-b ${borderColor}`}>
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 bg-green-500/10 rounded-xl items-center justify-center mr-3">
+                  <Bell size={20} color="#10B981" />
+                </View>
+                <Text className={`text-2xl font-black ${textColor} tracking-tighter`}>Notificações</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowNotificationsModal(false)} className={`w-10 h-10 ${isDarkMode ? 'bg-white/10' : 'bg-gray-50'} rounded-full items-center justify-center`}>
+                <X size={20} color={isDarkMode ? 'white' : '#111827'} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView className="px-6 pt-6" showsVerticalScrollIndicator={false}>
+              {NOTIFICATIONS.map((notif) => {
+                const Icon = notif.icon;
+                return (
+                  <TouchableOpacity key={notif.id} activeOpacity={0.7} className={`flex-row ${cardColor} border ${borderColor} p-5 rounded-[32px] mb-4 shadow-sm`}>
+                    <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${
+                      notif.type === 'alert' ? 'bg-orange-500/10' : 
+                      notif.type === 'ranking' ? 'bg-blue-500/10' : 
+                      notif.type === 'impact' ? 'bg-green-500/10' : 'bg-gray-500/10'
+                    }`}>
+                      <Icon size={24} color={
+                        notif.type === 'alert' ? '#F97316' : 
+                        notif.type === 'ranking' ? '#3B82F6' : 
+                        notif.type === 'impact' ? '#10B981' : '#64748B'
+                      } />
+                    </View>
+                    <View className="flex-1">
+                      <View className="flex-row justify-between items-start mb-1">
+                        <Text className={`${textColor} font-bold text-base flex-1 pr-2`}>{notif.title}</Text>
+                        <Text className={`${subTextColor} text-[10px] font-bold uppercase`}>{notif.time}</Text>
+                      </View>
+                      <Text className={`${subTextColor} text-sm leading-tight`}>{notif.message}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+              <View className="items-center py-10">
+                <Text className={`${subTextColor} font-bold text-xs uppercase tracking-widest`}>Isso é tudo por hoje!</Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Header */}
+      <View className={`px-6 py-6 flex-row justify-between items-end ${bgColor}`}>
         <View>
           <View className="flex-row items-center mb-1">
-            <MotiView 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ loop: true, duration: 2000 }}
-              className="w-2 h-2 bg-green-500 rounded-full mr-2" 
-            />
+            <View className="w-2 h-2 bg-green-500 rounded-full mr-2" />
             <Text className={`${subTextColor} text-[11px] font-black uppercase tracking-[2px]`}>Explorar perto de si</Text>
           </View>
           <TouchableOpacity activeOpacity={0.7} onPress={() => setShowLocationModal(true)} className="flex-row items-center">
@@ -306,16 +327,12 @@ const HomeScreen = () => {
             <View className="absolute top-4 right-4 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full" />
           </TouchableOpacity>
         </View>
-      </MotiView>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
-        {/* Search with Focus Animation */}
+        {/* Search */}
         <View className={`px-6 pt-2 pb-6 ${bgColor}`}>
-          <MotiView 
-            from={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className={`flex-row items-center ${inputColor} border ${borderColor} rounded-[24px] px-5 py-4`}
-          >
+          <View className={`flex-row items-center ${inputColor} border ${borderColor} rounded-[24px] px-5 py-4`}>
             <Search size={20} color={isDarkMode ? '#64748B' : '#9CA3AF'} />
             <TextInput
               className={`flex-1 ml-4 ${textColor} font-bold text-base`}
@@ -324,36 +341,30 @@ const HomeScreen = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-          </MotiView>
+          </View>
         </View>
 
-        {/* Categories Bar with Animated Chips */}
+        {/* Categories Bar */}
         <View className={`${bgColor} pb-6 pt-2`}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24 }}>
-            {CATEGORIES.map((cat, idx) => {
+            {CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isActive = activeCategory === cat.name;
               return (
-                <MotiView
+                <TouchableOpacity 
                   key={cat.name}
-                  from={{ opacity: 0, translateX: 20 }}
-                  animate={{ opacity: 1, translateX: 0 }}
-                  transition={{ delay: 300 + (idx * 50) }}
+                  onPress={() => setActiveCategory(cat.name)} 
+                  className={`mr-3 px-5 py-3.5 rounded-2xl flex-row items-center border ${isActive ? 'bg-green-500 border-green-500 shadow-lg shadow-green-500/20' : `${cardColor} ${borderColor}`}`}
                 >
-                  <TouchableOpacity 
-                    onPress={() => setActiveCategory(cat.name)} 
-                    className={`mr-3 px-5 py-3.5 rounded-2xl flex-row items-center border ${isActive ? 'bg-green-500 border-green-500 shadow-lg shadow-green-500/20' : `${cardColor} ${borderColor}`}`}
-                  >
-                    <Icon size={16} color={isActive ? 'white' : (isDarkMode ? '#10B981' : '#10B981')} className="mr-2" />
-                    <Text className={`font-black text-xs uppercase tracking-wider ${isActive ? 'text-white' : subTextColor}`}>{cat.name}</Text>
-                  </TouchableOpacity>
-                </MotiView>
+                  <Icon size={16} color={isActive ? 'white' : '#10B981'} className="mr-2" />
+                  <Text className={`font-black text-xs uppercase tracking-wider ${isActive ? 'text-white' : subTextColor}`}>{cat.name}</Text>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>
         </View>
 
-        {/* Featured Card - Glow Effect */}
+        {/* Featured Card */}
         <View className="px-6 mb-8">
           <TouchableOpacity 
             activeOpacity={0.9} 
@@ -361,72 +372,51 @@ const HomeScreen = () => {
             className={`w-full h-52 ${isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-900'} rounded-[40px] overflow-hidden relative shadow-2xl`}
           >
             <View className="p-8 z-10">
-              <MotiView 
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ loop: true, duration: 3000 }}
-                className="flex-row items-center mb-2"
-              >
+              <View className="flex-row items-center mb-2">
                 <Star size={14} color="#FBBF24" fill="#FBBF24" className="mr-2" />
                 <Text className="text-white/60 font-black text-[10px] uppercase tracking-[3px]">Ranking da Comunidade</Text>
-              </MotiView>
+              </View>
               <Text className="text-white text-3xl font-black tracking-tighter leading-tight w-2/3">Seja um Herói do Mês!</Text>
-              <MotiView 
-                animate={{ translateX: [0, 5, 0] }}
-                transition={{ loop: true, duration: 1500 }}
-                className={`mt-6 ${isDarkMode ? 'bg-green-500' : 'bg-green-500'} self-start px-6 py-2.5 rounded-full flex-row items-center shadow-lg shadow-green-500/40`}
-              >
+              <View className={`mt-6 bg-green-500 self-start px-6 py-2.5 rounded-full flex-row items-center shadow-lg shadow-green-500/40`}>
                 <Text className="text-white font-black text-[10px] uppercase">Ver Ranking</Text>
                 <ChevronRight size={14} color="white" className="ml-1" />
-              </MotiView>
+              </View>
             </View>
-            {/* Animated background circles */}
-            <MotiView 
-              animate={{ scale: [1, 1.2, 1], rotate: '360deg' }}
-              transition={{ loop: true, duration: 10000, type: 'timing' }}
-              className="absolute -bottom-20 -right-20 w-64 h-64 bg-green-500/20 rounded-full" 
-            />
+            <View className="absolute -bottom-20 -right-20 w-64 h-64 bg-green-500/20 rounded-full" />
             <View className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mt-16 -mr-16" />
           </TouchableOpacity>
         </View>
 
-        {/* List Section with Animated Entrance */}
+        {/* List Section */}
         <View className="px-6">
           <View className="flex-row justify-between items-center mb-6">
             <Text className={`text-2xl font-black ${textColor} tracking-tighter`}>Disponíveis Agora</Text>
             <TouchableOpacity><Text className="text-green-500 font-bold text-sm">Ver todos</Text></TouchableOpacity>
           </View>
 
-          <AnimatePresence>
-            <View className="flex-row flex-wrap justify-between">
-              {filteredDonations.length === 0 ? (
-                <MotiView 
-                  from={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`w-full py-20 items-center ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-[32px] border-2 border-dashed ${borderColor}`}
-                >
-                  <View className={`${cardColor} w-20 h-20 rounded-full items-center justify-center mb-4`}>
-                    <Store size={32} color={isDarkMode ? '#475569' : '#D1D5DB'} />
-                  </View>
-                  <Text className={`${subTextColor} font-black text-lg`}>Sem resultados.</Text>
-                </MotiView>
-              ) : (
-                filteredDonations.map((item, index) => (
-                  <FoodCard 
-                    key={item.id} 
-                    item={item} 
-                    index={index}
-                    isDarkMode={isDarkMode}
-                    cardColor={cardColor}
-                    borderColor={borderColor}
-                    textColor={textColor}
-                    subTextColor={subTextColor}
-                    onDelete={handleDeleteDonation}
-                  />
-                ))
-              )}
-            </View>
-          </AnimatePresence>
+          <View className="flex-row flex-wrap justify-between">
+            {filteredDonations.length === 0 ? (
+              <View className={`w-full py-20 items-center ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'} rounded-[32px] border-2 border-dashed ${borderColor}`}>
+                <View className={`${cardColor} w-20 h-20 rounded-full items-center justify-center mb-4`}>
+                  <Store size={32} color={isDarkMode ? '#475569' : '#D1D5DB'} />
+                </View>
+                <Text className={`${subTextColor} font-black text-lg`}>Sem resultados.</Text>
+              </View>
+            ) : (
+              filteredDonations.map((item) => (
+                <FoodCard 
+                  key={item.id} 
+                  item={item} 
+                  isDarkMode={isDarkMode}
+                  cardColor={cardColor}
+                  borderColor={borderColor}
+                  textColor={textColor}
+                  subTextColor={subTextColor}
+                  onDelete={handleDeleteDonation}
+                />
+              ))
+            )}
+          </View>
         </View>
         <View className="h-32" />
       </ScrollView>
