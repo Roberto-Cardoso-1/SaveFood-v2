@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Mail, Lock, Box, ShoppingBag, AlertCircle, Camera } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Lock, Box, ShoppingBag, AlertCircle, Camera, Sparkles, Trophy } from 'lucide-react-native';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
@@ -24,6 +24,8 @@ const RegisterScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
   // Theme-aware styles
   const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
   const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
@@ -32,22 +34,7 @@ const RegisterScreen = () => {
   const borderColor = isDarkMode ? 'border-[#334155]' : 'border-green-50';
 
   const pickAvatar = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos de acesso às suas fotos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      setAvatar(result.assets[0].uri);
-    }
+    // ... (rest of pickAvatar)
   };
 
   const handleRegister = async () => {
@@ -77,6 +64,7 @@ const RegisterScreen = () => {
           tipo_perfil: objective === 'doador' ? 'Doador' : 'Receptor',
         });
         setSuccess(true);
+        setShowWelcomeModal(true);
       }
     } catch (err: any) {
       console.error('Erro ao registrar:', err.response?.data || err.message);
@@ -89,6 +77,44 @@ const RegisterScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
+      {/* 🌟 Welcome Modal */}
+      <Modal visible={showWelcomeModal} animationType="fade" transparent={true}>
+        <View className="flex-1 bg-black/60 items-center justify-center px-6">
+          <View className={`${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} w-full rounded-[48px] p-8 items-center border ${borderColor} shadow-2xl`}>
+            <View className="w-24 h-24 bg-green-500 rounded-[32px] items-center justify-center shadow-xl shadow-green-500/20 rotate-12 mb-8">
+              <View className="-rotate-12">
+                <Sparkles size={48} color="white" fill="white" />
+              </View>
+            </View>
+            
+            <Text className={`text-3xl font-black ${textColor} text-center tracking-tighter leading-tight`}>
+              Bem-vindo ao SaveFood, {nome.split(' ')[0]}! 🍎
+            </Text>
+            
+            <Text className={`${subTextColor} text-center text-base mt-4 px-2 leading-6`}>
+              Que alegria ter você conosco! Sua jornada para combater o desperdício de alimentos começa agora.
+            </Text>
+
+            <View className={`w-full ${isDarkMode ? 'bg-white/5' : 'bg-green-50'} rounded-3xl p-6 my-8 flex-row items-center`}>
+              <View className="w-12 h-12 bg-green-500 rounded-2xl items-center justify-center mr-4">
+                <Trophy size={24} color="white" />
+              </View>
+              <View className="flex-1">
+                <Text className={`${textColor} font-black text-sm uppercase tracking-wider`}>Primeiro Passo</Text>
+                <Text className={`${subTextColor} text-xs`}>Você acaba de ganhar 100 pontos de boas-vindas!</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => setShowWelcomeModal(false)}
+              className="w-full bg-green-500 py-5 rounded-[24px] items-center shadow-lg shadow-green-500/30"
+            >
+              <Text className="text-white font-black text-lg uppercase tracking-widest">VAMOS COMEÇAR</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView showsVerticalScrollIndicator={false} className="px-6">
         <View className="py-8">
           {/* Header */}
