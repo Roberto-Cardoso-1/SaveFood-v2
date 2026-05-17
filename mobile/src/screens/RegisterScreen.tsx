@@ -75,17 +75,28 @@ const RegisterScreen = () => {
     }
   };
 
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
+
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
       {/* 🌟 Welcome Modal */}
       <Modal visible={showWelcomeModal} animationType="fade" transparent={true}>
         <View className="flex-1 bg-black/60 items-center justify-center px-6">
           <View className={`${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} w-full rounded-[48px] p-8 items-center border ${borderColor} shadow-2xl`}>
-            <View className="w-24 h-24 bg-green-500 rounded-[32px] items-center justify-center shadow-xl shadow-green-500/20 rotate-12 mb-8">
-              <View className="-rotate-12">
-                <Sparkles size={48} color="white" fill="white" />
+            {avatar ? (
+              <Image source={{ uri: avatar }} className="w-24 h-24 rounded-[32px] rotate-12 mb-8" />
+            ) : (
+              <View className="w-24 h-24 bg-green-500 rounded-[32px] items-center justify-center shadow-xl shadow-green-500/20 rotate-12 mb-8">
+                <Text className="text-white text-3xl font-black -rotate-12">{getInitials(nome)}</Text>
               </View>
-            </View>
+            )}
             
             <Text className={`text-3xl font-black ${textColor} text-center tracking-tighter leading-tight`}>
               Bem-vindo ao SaveFood, {nome.split(' ')[0]}! 🍎
