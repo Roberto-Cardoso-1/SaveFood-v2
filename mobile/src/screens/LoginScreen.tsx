@@ -127,7 +127,7 @@ const LoginScreen = () => {
               />
             </View>
 
-            <TouchableOpacity className="self-end mt-1 mb-8" onPress={() => console.log('Esqueci minha senha')}>
+            <TouchableOpacity className="self-end mt-1 mb-8" onPress={() => navigation.navigate('ForgotPassword')}>
               <Text className="text-green-600 font-bold text-sm tracking-tight">Esqueci minha senha</Text>
             </TouchableOpacity>
 

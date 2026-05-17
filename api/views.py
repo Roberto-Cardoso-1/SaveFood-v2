@@ -22,6 +22,17 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         except Usuario.DoesNotExist:
             return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=False, methods=['post'])
+    def recuperar_senha(self, request):
+        email = request.data.get('email')
+        try:
+            usuario = Usuario.objects.get(email=email)
+            # Em um sistema real, aqui dispararíamos um e-mail com token.
+            # Para fins de demonstração, retornaremos sucesso.
+            return Response({'status': 'Instruções de recuperação enviadas para o e-mail informado.'}, status=status.HTTP_200_OK)
+        except Usuario.DoesNotExist:
+            return Response({'error': 'E-mail não encontrado em nossa base de dados.'}, status=status.HTTP_404_NOT_FOUND)
+
 class DoacaoViewSet(viewsets.ModelViewSet):
     queryset = Doacao.objects.all()
     serializer_class = DoacaoSerializer
