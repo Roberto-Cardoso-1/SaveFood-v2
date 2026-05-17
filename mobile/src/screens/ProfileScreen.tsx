@@ -128,6 +128,15 @@ const ProfileScreen = () => {
     }
   };
 
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
+
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
       {/* Detail Modal */}
@@ -150,10 +159,16 @@ const ProfileScreen = () => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="items-center py-8 px-6">
           <View className="relative">
-            <Image
-              source={{ uri: user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400' }}
-              className="w-32 h-32 rounded-full border-4 border-green-500/20"
-            />
+            {user?.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                className="w-32 h-32 rounded-full border-4 border-green-500/20"
+              />
+            ) : (
+              <View className="w-32 h-32 rounded-full bg-green-500 items-center justify-center border-4 border-green-500/20">
+                <Text className="text-white text-4xl font-black">{getInitials(user?.name || '')}</Text>
+              </View>
+            )}
             <View className="absolute bottom-1 right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white items-center justify-center">
               <View className="w-2 h-2 bg-white rounded-full" />
             </View>
