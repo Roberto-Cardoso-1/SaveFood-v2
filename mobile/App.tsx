@@ -26,6 +26,9 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
+  const user = useAppStore((state) => state.user);
+  const isDoador = user?.tipo_perfil?.toLowerCase() === 'doador';
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -34,7 +37,7 @@ function TabNavigator() {
       }}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
-      <Tab.Screen name="Doar" component={DonateScreen} />
+      {isDoador && <Tab.Screen name="Doar" component={DonateScreen} />}
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>

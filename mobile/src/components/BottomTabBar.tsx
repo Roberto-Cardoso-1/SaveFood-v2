@@ -29,7 +29,8 @@ const TabItem: React.FC<TabItemProps> = ({ label, icon: Icon, active, onPress, i
 
 export const BottomTabBar = ({ activeTab = 'Início' }) => {
   const navigation = useNavigation<any>();
-  const { isDarkMode } = useAppStore();
+  const { isDarkMode, user } = useAppStore();
+  const isDoador = user?.tipo_perfil?.toLowerCase() === 'doador';
 
   const bgColor = isDarkMode ? 'bg-[#1E293B]/90' : 'bg-white/90';
   const borderColor = isDarkMode ? 'border-white/10' : 'border-gray-100';
@@ -54,13 +55,15 @@ export const BottomTabBar = ({ activeTab = 'Início' }) => {
         onPress={() => navigation.navigate('Início')}
         isDarkMode={isDarkMode}
       />
-      <TabItem 
-        label="Doar" 
-        icon={PlusCircle} 
-        active={activeTab === 'Doar'} 
-        onPress={() => navigation.navigate('Doar')}
-        isDarkMode={isDarkMode}
-      />
+      {isDoador && (
+        <TabItem 
+          label="Doar" 
+          icon={PlusCircle} 
+          active={activeTab === 'Doar'} 
+          onPress={() => navigation.navigate('Doar')}
+          isDarkMode={isDarkMode}
+        />
+      )}
       <TabItem 
         label="Mapa" 
         icon={Map} 
