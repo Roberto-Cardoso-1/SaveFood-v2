@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password, check_password
 
 def validate_positive_nonzero(value):
     if value <= 0:
@@ -14,6 +15,15 @@ class Usuario(models.Model):
     email = models.EmailField(unique=True)
     senha = models.CharField(max_length=255)  
     tipo_perfil = models.CharField(max_length=10, choices=PERFIL_CHOICES)
+
+    def save(self, *args, **kwargs):
+        # Hash a senha apenas se ela não estiver no formato de hash do Django
+        if self.senha and not self.senha.startswith('pbkdf2_sha256$'):
+            self.senha = make_password(self.senha)
+        super().save(*args, **kwargs)
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.senha)
 
     def __str__(self):
         return self.nome

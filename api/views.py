@@ -15,7 +15,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         
         try:
             usuario = Usuario.objects.get(email=email)
-            if usuario.senha == senha:
+            if usuario.check_password(senha):
                 serializer = self.get_serializer(usuario)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response({'error': 'Senha incorreta.'}, status=status.HTTP_401_UNAUTHORIZED)

@@ -57,4 +57,4 @@ O sistema foi estruturado em uma arquitetura cliente-servidor, composta por:
 A primeira versão do SaveFood estabelece uma base sólida para a plataforma, com um backend funcional e uma interface mobile moderna e responsiva. O projeto cumpre os requisitos iniciais de conectividade e gestão de doações, estando pronto para a expansão de funcionalidades geográficas e de engajamento.
 
 **Data:** 16 de maio de 2026
-**Responsável:** Gemini CLI (Assistente de Desenvolvimento)
+
