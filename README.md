@@ -1,83 +1,95 @@
-# SaveFood API - Documentação Técnica (OAT Parte 1)
+# SaveFood 🍎
 
-Este repositório contém o backend do projeto **SaveFood**, desenvolvido para a disciplina de Desenvolvimento Mobile. O objetivo da aplicação é gerenciar doações de alimentos, conectando doadores e receptores para reduzir o desperdício.
+O **SaveFood** é uma plataforma desenvolvida para combater o desperdício de alimentos, conectando doadores (restaurantes, supermercados, indivíduos) a receptores (ONGs, comunidades, pessoas em necessidade).
 
-## 🔗 Repositório GitHub
-O código-fonte completo está disponível em: [https://github.com/Roberto-Cardoso-1/OAT-Desenvolvimento-Mobile](https://github.com/Roberto-Cardoso-1/OAT-Desenvolvimento-Mobile)
-
----
-
-## 🚀 Manual de Uso dos Endpoints
-
-A API foi construída utilizando **Django REST Framework** e fornece os seguintes recursos:
-
-### 1. Usuários (`/api/usuarios/`)
-Gerencia o cadastro de doadores e receptores.
-
-*   **Listar todos os usuários:** `GET /api/usuarios/`
-*   **Criar novo usuário:** `POST /api/usuarios/`
-    *   **Payload:**
-        ```json
-        {
-          "nome": "João Silva",
-          "email": "joao@email.com",
-          "senha": "senha123",
-          "tipo_perfil": "doador"
-        }
-        ```
-*   **Detalhes do usuário:** `GET /api/usuarios/{id}/`
-*   **Excluir usuário:** `DELETE /api/usuarios/{id}/`
-
-### 2. Doações (`/api/doacoes/`)
-Gerencia os alimentos disponíveis para doação.
-
-*   **Listar doações:** `GET /api/doacoes/`
-*   **Cadastrar doação:** `POST /api/doacoes/`
-    *   **Payload:**
-        ```json
-        {
-          "produto": "Arroz 5kg",
-          "quantidade": 2,
-          "validade": "2026-12-31",
-          "status": "disponivel",
-          "doador": 1
-        }
-        ```
-*   **Reservar Doação:** `POST /api/doacoes/{id}/reservar/`
-    *   **Descrição:** Altera o status da doação de "disponível" para "reservado".
-    *   **Resposta de Sucesso (200 OK):**
-        ```json
-        { "status": "Doação reservada com sucesso." }
-        ```
-
-### 3. Login (`/api/login/`)
-*   **Endpoint de Autenticação:** `POST /api/login/`
-    *   *(Nota: Endpoint em fase de implementação inicial)*
+Este repositório contém tanto o **Backend (API)** quanto o **Frontend Mobile (App)** do projeto.
 
 ---
 
-## 🛠️ Como rodar o projeto localmente
+## 🚀 Funcionalidades
 
-1.  **Clonar o repositório:**
-    ```bash
-    git clone https://github.com/Roberto-Cardoso-1/OAT-Desenvolvimento-Mobile.git
-    cd OAT-Desenvolvimento-Mobile
-    ```
+### 📱 Mobile
+- **Cadastro e Login:** Perfis distintos para Doadores e Receptores.
+- **Feed de Doações:** Visualização de alimentos disponíveis próximos ao usuário.
+- **Criação de Doações:** Doadores podem cadastrar produtos com fotos, quantidade e validade.
+- **Reserva de Alimentos:** Receptores podem reservar itens disponíveis para coleta.
+- **Mapa:** (Em desenvolvimento) Visualização geográfica dos pontos de doação.
+- **Perfil:** Gerenciamento de dados do usuário e histórico.
 
-2.  **Configurar ambiente virtual:**
-    ```bash
-    python -m venv venv
-    .\venv\Scripts\activate   #para o windows
-    ```
+### ⚙️ Backend (API)
+- **Gestão de Usuários:** CRUD completo de perfis.
+- **Gestão de Doações:** Endpoints para listagem, cadastro e atualização de status.
+- **Autenticação:** Sistema de login para validação de acesso.
+- **Processamento de Imagens:** Suporte para upload de fotos dos alimentos doados.
 
-3.  **Instalar dependências:**
-    ```bash
-    pip install django djangorestframework
-    ```
+---
 
-4.  **Rodar migrações e iniciar servidor:**
-    ```bash
-    python manage.py migrate
-    python manage.py runserver
-    ```
-    A API estará acessível em `http://127.0.0.1:8000/api/`
+## 🛠️ Tecnologias Utilizadas
+
+### **Mobile**
+- [React Native](https://reactnative.dev/) + [Expo](https://expo.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [NativeWind](https://www.nativewind.dev/) (Tailwind CSS para React Native)
+- [Zustand](https://github.com/pmndrs/zustand) (Gerenciamento de Estado)
+- [Axios](https://axios-http.com/) (Consumo de API)
+- [Lucide React Native](https://lucide.dev/) (Ícones)
+
+### **Backend**
+- [Python](https://www.python.org/) + [Django](https://www.djangoproject.com/)
+- [Django REST Framework](https://www.django-rest-framework.org/)
+- [SQLite](https://www.sqlite.org/) (Banco de dados)
+- [CORS Headers](https://github.com/adamchainz/django-cors-headers)
+
+---
+
+## 📦 Como Instalar e Rodar
+
+### 1️⃣ Clonar o Repositório
+```bash
+git clone https://github.com/Roberto-Cardoso-1/OAT-Desenvolvimento-Mobile.git
+cd OAT-Desenvolvimento-Mobile
+```
+
+### 2️⃣ Configurar o Backend
+```bash
+# Criar ambiente virtual
+python -m venv venv
+
+# Ativar ambiente virtual
+# No Windows:
+.\venv\Scripts\activate
+# No Linux/macOS:
+source venv/bin/activate
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Rodar migrações
+python manage.py migrate
+
+# Iniciar o servidor
+python manage.py runserver
+```
+A API estará disponível em `http://127.0.0.1:8000/api/`
+
+### 3️⃣ Configurar o Mobile
+```bash
+cd mobile
+
+# Instalar dependências
+npm install
+
+# Iniciar o Expo
+npx expo start
+```
+Use o aplicativo **Expo Go** no seu celular para testar ou um emulador Android/iOS.
+
+---
+
+## 🔗 Links Úteis
+- **Repositório GitHub:** [SaveFood Repo](https://github.com/Roberto-Cardoso-1/OAT-Desenvolvimento-Mobile)
+- **Documentação DRF:** [Django REST Framework](https://www.django-rest-framework.org/)
+
+---
+
+Desenvolvido para a disciplina de **Desenvolvimento Mobile**.
