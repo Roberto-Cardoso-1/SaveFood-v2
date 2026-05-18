@@ -5,12 +5,20 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Usuario, Doacao
 from .serializers import UsuarioSerializer, DoacaoSerializer
 
+@action(detail=False, methods=['get'])
+    def ping(self, request):
+        return Response({'status': 'ok', 'message': 'Conexão com o servidor estabelecida!'}, status=status.HTTP_200_OK)
+
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    parser_classes = (MultiPartParser, FormParser, JSONParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+
+    def create(self, request, *args, **kwargs):
+        print(f"Recebendo tentativa de cadastro: {request.data}")
+        return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
