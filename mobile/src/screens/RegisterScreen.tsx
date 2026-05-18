@@ -34,7 +34,23 @@ const RegisterScreen = () => {
   const borderColor = isDarkMode ? 'border-[#334155]' : 'border-green-50';
 
   const pickAvatar = async () => {
-    // ... (rest of pickAvatar)
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Precisamos de permissão para acessar sua galeria.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
   };
 
   const handleRegister = async () => {
@@ -68,7 +84,20 @@ const RegisterScreen = () => {
       }
     } catch (err: any) {
       console.error('Erro ao registrar:', err.response?.data || err.message);
-      const msg = err.response?.data?.email ? 'Este e-mail já existe.' : 'Erro ao criar conta no servidor.';
+      
+      // Captura o erro detalhado do servidor
+      let errorDetail = '';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorDetail = err.response.data;
+        } else {
+          errorDetail = JSON.stringify(err.response.data);
+        }
+      } else {
+        errorDetail = err.message;
+      }
+
+      const msg = err.response?.data?.email ? 'Este e-mail já existe.' : `Erro no servidor: ${errorDetail}`;
       setError(msg);
     } finally {
       setLoading(false);
@@ -173,22 +202,22 @@ const RegisterScreen = () => {
               <View className="flex-row" style={{ gap: 16 }}>
                 <TouchableOpacity
                   onPress={() => { setObjective('doador'); setError(null); }}
-                  className={`flex-1 p-6 rounded-[32px] border-2 ${objective === 'doador' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'} items-center`}
+                  className={`flex-1 p-4 rounded-[32px] border-2 ${objective === 'doador' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'} items-center justify-center`}
                 >
-                  <View className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${objective === 'doador' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-white'}`}>
-                    <Box size={32} color={objective === 'doador' ? 'white' : '#64748B'} />
+                  <View className={`w-14 h-14 rounded-2xl items-center justify-center mb-3 ${objective === 'doador' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}>
+                    <Box size={28} color={objective === 'doador' ? 'white' : isDarkMode ? '#94A3B8' : '#64748B'} />
                   </View>
-                  <Text className={`font-black text-sm uppercase tracking-wider ${objective === 'doador' ? 'text-green-600' : '#64748B'}`}>Vou Doar</Text>
+                  <Text className={`font-bold text-xs uppercase tracking-widest ${objective === 'doador' ? 'text-green-600' : isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Vou Doar</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => { setObjective('receptor'); setError(null); }}
-                  className={`flex-1 p-6 rounded-[32px] border-2 ${objective === 'receptor' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'} items-center`}
+                  className={`flex-1 p-4 rounded-[32px] border-2 ${objective === 'receptor' ? 'border-green-500 bg-green-500/10' : isDarkMode ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-gray-50'} items-center justify-center`}
                 >
-                  <View className={`w-16 h-16 rounded-2xl items-center justify-center mb-4 ${objective === 'receptor' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-white'}`}>
-                    <ShoppingBag size={32} color={objective === 'receptor' ? 'white' : '#64748B'} />
+                  <View className={`w-14 h-14 rounded-2xl items-center justify-center mb-3 ${objective === 'receptor' ? 'bg-green-500' : isDarkMode ? 'bg-white/10' : 'bg-gray-200'}`}>
+                    <ShoppingBag size={28} color={objective === 'receptor' ? 'white' : isDarkMode ? '#94A3B8' : '#64748B'} />
                   </View>
-                  <Text className={`font-black text-sm uppercase tracking-wider ${objective === 'receptor' ? 'text-green-600' : '#64748B'}`}>Vou Receber</Text>
+                  <Text className={`font-bold text-xs uppercase tracking-widest ${objective === 'receptor' ? 'text-green-600' : isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Vou Receber</Text>
                 </TouchableOpacity>
               </View>
             </View>
