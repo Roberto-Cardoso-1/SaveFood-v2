@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -9,6 +9,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -55,6 +57,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class DoacaoViewSet(viewsets.ModelViewSet):
     queryset = Doacao.objects.all()
     serializer_class = DoacaoSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
     @action(detail=True, methods=['post'])
     def reservar(self, request, pk=None):
