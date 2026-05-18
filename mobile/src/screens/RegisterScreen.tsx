@@ -64,7 +64,8 @@ const RegisterScreen = () => {
 
     setLoading(true);
     try {
-      const response = await api.post('usuarios/', {
+      console.log('Tentando cadastrar em:', api.defaults.baseURL + '/usuarios/');
+      const response = await api.post('/usuarios/', {
         nome,
         email,
         senha,
