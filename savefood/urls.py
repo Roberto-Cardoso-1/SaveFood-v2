@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from django.http import HttpResponse
 
 def health_check(request):
-    return HttpResponse("SERVIDOR SAVEFOOD ESTA VIVO!")
+    return HttpResponse("SERVIDOR SAVEFOOD ESTA VIVO E PRONTO!")
 
 urlpatterns = [
     path('', health_check),
