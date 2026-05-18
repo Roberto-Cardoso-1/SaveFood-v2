@@ -1,11 +1,24 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 from .views import UsuarioViewSet, DoacaoViewSet
 
-router = DefaultRouter()
-router.register(r'usuarios', UsuarioViewSet)
-router.register(r'doacoes', DoacaoViewSet)
+usuario_list = UsuarioViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+usuario_detail = UsuarioViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+})
+
+doacao_list = DoacaoViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('usuarios/', usuario_list, name='usuario-list'),
+    path('usuarios/<int:pk>/', usuario_detail, name='usuario-detail'),
+    path('doacoes/', doacao_list, name='doacao-list'),
 ]
