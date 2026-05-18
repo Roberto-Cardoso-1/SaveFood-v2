@@ -18,9 +18,11 @@ if os.environ.get('RENDER'):
     import django
     django.setup()
     from django.core.management import call_command
+    from api.db_check import verify_and_fix_db
     try:
         call_command('migrate', interactive=False)
-        print("Migrações aplicadas com sucesso!")
+        verify_and_fix_db()
+        print("Migrações e verificação concluídas!")
     except Exception as e:
         print(f"Erro ao aplicar migrações: {e}")
 
