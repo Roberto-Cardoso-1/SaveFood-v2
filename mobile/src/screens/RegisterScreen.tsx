@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Image, Modal } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Image, Modal, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, User, Mail, Lock, Box, ShoppingBag, AlertCircle, Camera, Sparkles, Trophy } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Lock, Box, ShoppingBag, AlertCircle, Camera, Sparkles, Trophy, CheckCircle2 } from 'lucide-react-native';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
@@ -22,16 +22,34 @@ const RegisterScreen = () => {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
+  
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Custom Toast State
+  const [showToast, setShowToast] = useState(false);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastY = useRef(new Animated.Value(-20)).current;
 
   // Theme-aware styles
   const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
   const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
   const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
-  const cardColor = isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50';
   const borderColor = isDarkMode ? 'border-[#334155]' : 'border-green-50';
+
+  const triggerToast = () => {
+    setShowToast(true);
+    Animated.parallel([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(toastY, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(toastY, { toValue: -20, duration: 300, useNativeDriver: true }),
+      ]).start(() => setShowToast(false));
+    }, 1500);
+  };
 
   const pickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -55,7 +73,6 @@ const RegisterScreen = () => {
 
   const handleRegister = async () => {
     setError(null);
-    setSuccess(false);
     
     if (!nome || !email || !senha || !objective) {
       setError('Por favor, preencha todos os campos e selecione seu perfil.');
@@ -64,7 +81,6 @@ const RegisterScreen = () => {
 
     setLoading(true);
     try {
-      console.log('Tentando cadastrar em:', api.defaults.baseURL + 'usuarios/');
       const response = await api.post('usuarios/', {
         nome,
         email,
@@ -73,32 +89,23 @@ const RegisterScreen = () => {
       });
 
       if (response.status === 201) {
-        setUser({
-          id: response.data.id,
-          name: nome,
-          email: email,
-          avatar: avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-          tipo_perfil: objective === 'doador' ? 'Doador' : 'Receptor',
-        });
-        setSuccess(true);
-        setShowWelcomeModal(true);
+        triggerToast();
+
+        // Aguarda o toast antes de mostrar o modal de boas-vindas
+        setTimeout(() => {
+          setUser({
+            id: response.data.id,
+            name: nome,
+            email: email,
+            avatar: avatar || undefined,
+            tipo_perfil: objective === 'doador' ? 'Doador' : 'Receptor',
+          });
+          setShowWelcomeModal(true);
+        }, 1800);
       }
     } catch (err: any) {
       console.error('Erro ao registrar:', err.response?.data || err.message);
-      
-      // Captura o erro detalhado do servidor
-      let errorDetail = '';
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorDetail = err.response.data;
-        } else {
-          errorDetail = JSON.stringify(err.response.data);
-        }
-      } else {
-        errorDetail = err.message;
-      }
-
-      const msg = err.response?.data?.email ? 'Este e-mail já existe.' : `Erro no servidor: ${errorDetail}`;
+      const msg = err.response?.data?.email ? 'Este e-mail já existe.' : 'Erro ao cadastrar. Tente novamente.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -116,6 +123,26 @@ const RegisterScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
+      {/* 🍞 Custom Success Toast */}
+      {showToast && (
+        <Animated.View 
+          style={{ 
+            opacity: toastOpacity, 
+            transform: [{ translateY: toastY }],
+            position: 'absolute',
+            top: 60,
+            left: 24,
+            right: 24,
+            zIndex: 100
+          }}
+        >
+          <View className={`flex-row items-center ${isDarkMode ? 'bg-[#1E293B]' : 'bg-green-600'} px-6 py-4 rounded-3xl shadow-2xl border ${isDarkMode ? 'border-green-500/30' : 'border-green-500'}`}>
+            <CheckCircle2 size={24} color="#10B981" />
+            <Text className="text-white font-black ml-4 text-base tracking-tight">Cadastro realizado com sucesso!</Text>
+          </View>
+        </Animated.View>
+      )}
+
       {/* 🌟 Welcome Modal */}
       <Modal visible={showWelcomeModal} animationType="fade" transparent={true}>
         <View className="flex-1 bg-black/60 items-center justify-center px-6">
@@ -158,7 +185,6 @@ const RegisterScreen = () => {
 
       <ScrollView showsVerticalScrollIndicator={false} className="px-6">
         <View className="py-8">
-          {/* Header */}
           <View className="flex-row justify-between items-center mb-10">
             <TouchableOpacity 
               className={`w-12 h-12 ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-100'} rounded-2xl items-center justify-center border shadow-sm`} 
@@ -174,7 +200,6 @@ const RegisterScreen = () => {
             Crie sua conta para ajudar a economizar <Text className="text-green-600 font-bold">comida</Text>.
           </Text>
 
-          {/* Avatar Selection */}
           <View className="items-center mb-10">
             <TouchableOpacity 
               onPress={pickAvatar}
@@ -191,13 +216,11 @@ const RegisterScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Form */}
           <View style={{ gap: 20 }}>
             <Input label="Nome" placeholder="Seu nome completo" icon={User} value={nome} onChangeText={(text) => { setNome(text); setError(null); }} />
             <Input label="E-mail" placeholder="seu@email.com" icon={Mail} keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={(text) => { setEmail(text); setError(null); }} />
             <Input label="Senha" placeholder="Escolha uma senha" icon={Lock} secureTextEntry value={senha} onChangeText={(text) => { setSenha(text); setError(null); }} />
 
-            {/* Objective Selection */}
             <View className="mt-4 mb-4">
               <Text className={`text-xl font-black ${textColor} mb-6 tracking-tight`}>O que você quer fazer?</Text>
               <View className="flex-row" style={{ gap: 16 }}>
@@ -223,7 +246,6 @@ const RegisterScreen = () => {
               </View>
             </View>
 
-            {/* Notifications */}
             {error && (
               <View className={`flex-row items-center ${isDarkMode ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-100'} p-5 rounded-[24px] border`}>
                 <View className="w-10 h-10 bg-red-100/20 rounded-full items-center justify-center mr-4">
@@ -233,21 +255,11 @@ const RegisterScreen = () => {
               </View>
             )}
 
-            {success && (
-              <View className="flex-row items-center bg-green-500/10 p-5 rounded-[24px] border border-green-500/20">
-                <View className="w-10 h-10 bg-green-500 rounded-full items-center justify-center mr-4">
-                  <Text className="text-white text-lg font-bold">✓</Text>
-                </View>
-                <Text className="text-green-600 font-bold text-sm flex-1 leading-tight">Tudo certo! Redirecionando...</Text>
-              </View>
-            )}
-
             <View className="mt-4 mb-10 shadow-2xl shadow-green-500/10">
               <Button title="Criar conta" loading={loading} onPress={handleRegister} />
             </View>
           </View>
 
-          {/* Footer */}
           <View className="flex-row justify-center pb-12">
             <Text className={`${subTextColor} font-medium text-base`}>Já tem uma conta? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>

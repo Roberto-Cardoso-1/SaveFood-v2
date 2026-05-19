@@ -5,11 +5,15 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Usuario, Doacao
 from .serializers import UsuarioSerializer, DoacaoSerializer
 
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def ping(request):
     return Response({'status': 'ok', 'message': 'Conexão com o servidor estabelecida!'}, status=status.HTTP_200_OK)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
@@ -34,10 +38,22 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def atualizar_perfil(self, request, pk=None):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        print(f"Atualizando perfil do usuário {pk}. Dados recebidos: {request.data}")
+        
+        # Se o avatar vier como string vazia ou explicitamente "null", removemos a imagem atual
+        data = request.data.copy()
+        if 'avatar' in data and (data['avatar'] == '' or data['avatar'] == 'null'):
+            instance.avatar.delete(save=False)
+            instance.avatar = None
+            data.pop('avatar')
+            
+        serializer = self.get_serializer(instance, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            print(f"Perfil atualizado com sucesso: {serializer.data}")
             return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        print(f"Erro na validação do perfil: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])

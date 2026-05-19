@@ -77,7 +77,7 @@ const FoodCard = ({ item, isDarkMode, cardColor, borderColor, textColor, subText
 };
 
 const HomeScreen = () => {
-  const { donations, localizacao, setLocalizacao, removeDonation, user, isDarkMode, toggleDarkMode } = useAppStore();
+  const { donations, localizacao, setLocalizacao, removeDonation, user, isDarkMode, toggleDarkMode, fetchDonations } = useAppStore();
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -85,6 +85,10 @@ const HomeScreen = () => {
   const [showRankingModal, setShowRankingModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [selectedState, setSelectedState] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    fetchDonations();
+  }, []);
 
   const handleSelectCity = (city: string) => {
     const stateMap: { [key: string]: string } = {
@@ -111,10 +115,15 @@ const HomeScreen = () => {
   };
 
   const filteredDonations = donations.filter((item) => {
-    const matchesCategory = activeCategory === 'Todos' || 
-                           item.categoria.toLowerCase() === activeCategory.toLowerCase();
-    const matchesSearch = item.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.categoria.toLowerCase().includes(searchQuery.toLowerCase());
+    // Normalizar para comparação (Trim para evitar espaços extras vindo do DB)
+    const itemCat = (item.categoria || '').trim();
+    const activeCat = activeCategory.trim();
+    
+    const matchesCategory = activeCat === 'Todos' || itemCat === activeCat;
+    
+    const matchesSearch = (item.titulo || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (item.estabelecimento || '').toLowerCase().includes(searchQuery.toLowerCase());
+                         
     return matchesCategory && matchesSearch;
   });
 

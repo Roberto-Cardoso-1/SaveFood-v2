@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, Leaf, AlertCircle, Moon, Sun, Sparkles } from 'lucide-react-native';
+import { Mail, Lock, Leaf, AlertCircle, Moon, Sun, Sparkles, CheckCircle2 } from 'lucide-react-native';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAppStore } from '../store/useAppStore';
@@ -21,6 +21,26 @@ const LoginScreen = () => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [userName, setUserName] = useState('');
+  
+  // Custom Toast State
+  const [showToast, setShowToast] = useState(false);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastY = useRef(new Animated.Value(-20)).current;
+
+  const triggerToast = () => {
+    setShowToast(true);
+    Animated.parallel([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(toastY, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+
+    setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(toastY, { toValue: -20, duration: 300, useNativeDriver: true }),
+      ]).start(() => setShowToast(false));
+    }, 1500);
+  };
 
   const handleLogin = async () => {
     setError(null);
@@ -38,23 +58,25 @@ const LoginScreen = () => {
 
       if (response.status === 200) {
         const userData = response.data;
-        
         let avatarUrl = userData.avatar;
         if (avatarUrl && !avatarUrl.startsWith('http')) {
-          avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
+          avatarUrl = `${api.defaults.baseURL.replace('/api/', '')}${avatarUrl}`;
         }
 
         setUserName(userData.nome);
-        setShowWelcomeModal(true);
-        
-        // Armazenamos o usuário mas mantemos o modal aberto
-        setUser({
-          id: userData.id,
-          name: userData.nome,
-          email: userData.email,
-          avatar: avatarUrl || undefined,
-          tipo_perfil: userData.tipo_perfil,
-        });
+        triggerToast();
+
+        // Aguarda o toast antes de mostrar o modal de boas-vindas
+        setTimeout(() => {
+          setShowWelcomeModal(true);
+          setUser({
+            id: userData.id,
+            name: userData.nome,
+            email: userData.email,
+            avatar: avatarUrl || undefined,
+            tipo_perfil: userData.tipo_perfil === 'doador' ? 'Doador' : 'Receptor',
+          });
+        }, 1800);
       }
     } catch (err: any) {
       console.error('Erro ao fazer login:', err.response?.data || err.message);
@@ -82,6 +104,26 @@ const LoginScreen = () => {
 
   return (
     <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
+      {/* 🍞 Custom Success Toast */}
+      {showToast && (
+        <Animated.View 
+          style={{ 
+            opacity: toastOpacity, 
+            transform: [{ translateY: toastY }],
+            position: 'absolute',
+            top: 60,
+            left: 24,
+            right: 24,
+            zIndex: 100
+          }}
+        >
+          <View className={`flex-row items-center ${isDarkMode ? 'bg-[#1E293B]' : 'bg-green-600'} px-6 py-4 rounded-3xl shadow-2xl border ${isDarkMode ? 'border-green-500/30' : 'border-green-500'}`}>
+            <CheckCircle2 size={24} color="#10B981" />
+            <Text className="text-white font-black ml-4 text-base tracking-tight">Login efetuado com sucesso!</Text>
+          </View>
+        </Animated.View>
+      )}
+
       {/* 🌟 Welcome Modal */}
       <Modal visible={showWelcomeModal} animationType="fade" transparent={true}>
         <View className="flex-1 bg-black/60 items-center justify-center px-6">

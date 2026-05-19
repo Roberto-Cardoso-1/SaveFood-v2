@@ -35,7 +35,16 @@ class Doacao(models.Model):
         ('reservado', 'Reservado'),
         ('entregue', 'Entregue'),
     ]
+    CATEGORIA_CHOICES = [
+        ('Padaria', 'Padaria'),
+        ('Frutas', 'Frutas'),
+        ('Refeições', 'Refeições'),
+        ('Doces', 'Doces'),
+        ('Laticínios', 'Laticínios'),
+        ('Outros', 'Outros'),
+    ]
     produto = models.CharField(max_length=255)
+    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='Outros')
     quantidade = models.IntegerField(validators=[validate_positive_nonzero])
     validade = models.DateField()
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='disponivel')

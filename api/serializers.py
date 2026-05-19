@@ -8,6 +8,8 @@ class UsuarioSerializer(serializers.ModelSerializer):
         extra_kwargs = {'senha': {'write_only': True}}
 
 class DoacaoSerializer(serializers.ModelSerializer):
+    estabelecimento = serializers.CharField(source='doador.nome', read_only=True)
+    
     class Meta:
         model = Doacao
-        fields = '__all__'
+        fields = ['id', 'produto', 'categoria', 'quantidade', 'validade', 'status', 'doador', 'imagem', 'estabelecimento']

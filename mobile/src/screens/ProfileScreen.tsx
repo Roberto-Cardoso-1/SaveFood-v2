@@ -119,7 +119,7 @@ const ProfileScreen = () => {
         const updatedUser = response.data;
         let avatarUrl = updatedUser.avatar;
         if (avatarUrl && !avatarUrl.startsWith('http')) {
-          avatarUrl = `http://127.0.0.1:8000${avatarUrl}`;
+          avatarUrl = `${api.defaults.baseURL.replace('/api/', '')}${avatarUrl}`;
         }
 
         updateUser({ 
