@@ -1,15 +1,15 @@
 // Configuração do Metro Bundler.
 //
-// Por padrão o Expo SDK 54 resolve pacotes pelo campo `exports.import` quando
-// está em ambiente browser (web). O Zustand publica nos arquivos `esm/*.mjs`
-// código com `import.meta.env.MODE` — sintaxe que o bundle clássico (script,
-// não module) do Expo Web não aceita, causando:
+// O Zustand publica nos arquivos `esm/*.mjs` código com `import.meta.env.MODE`
+// — sintaxe que NÃO é aceita pelo bundle clássico do Expo Web (script tag) nem
+// pelo Hermes (motor JS do Android/iOS). Resultados:
 //
-//     Uncaught SyntaxError: Cannot use 'import.meta' outside a module
+//   Web:     Uncaught SyntaxError: Cannot use 'import.meta' outside a module
+//   Hermes:  SyntaxError: `import.meta` is not supported in Hermes.
 //
-// Solução: interceptar `resolveRequest` e redirecionar `zustand` (e subpaths)
-// para os arquivos CJS, que são funcionalmente idênticos mas usam
-// `process.env.NODE_ENV` em vez de `import.meta.env.MODE`.
+// Solução: interceptar `resolveRequest` em TODAS as plataformas e redirecionar
+// `zustand` (e subpaths) para os arquivos CJS, que são funcionalmente
+// idênticos mas usam `process.env.NODE_ENV` em vez de `import.meta.env.MODE`.
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
@@ -36,7 +36,7 @@ const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver = {
   ...config.resolver,
   resolveRequest: (context, moduleName, platform) => {
-    if (platform === 'web' && Object.prototype.hasOwnProperty.call(zustandCjsMap, moduleName)) {
+    if (Object.prototype.hasOwnProperty.call(zustandCjsMap, moduleName)) {
       return {
         filePath: zustandCjsMap[moduleName],
         type: 'sourceFile',
