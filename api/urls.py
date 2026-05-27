@@ -9,6 +9,7 @@ from .views import (
     NotificacaoViewSet,
     SaveFoodTokenView,
     ping,
+    seed_database,
 )
 
 router = DefaultRouter(trailing_slash=True)
@@ -23,6 +24,10 @@ usuario_recuperar_senha_legacy = UsuarioViewSet.as_view({'post': 'recuperar_senh
 
 urlpatterns = [
     path('ping/', ping, name='ping'),
+
+    # Seed protegido por SEED_KEY (env var). Substitui populate_products.py
+    # quando não há acesso a Shell (Render free tier).
+    path('admin/seed/', seed_database, name='seed-database'),
 
     # JWT
     path('token/', SaveFoodTokenView.as_view(), name='token_obtain_pair'),

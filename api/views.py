@@ -44,6 +44,45 @@ def ping(request):
     return Response({'status': 'ok', 'message': 'Conexão com o servidor estabelecida!'})
 
 
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def seed_database(request):
+    """
+    Dispara o populate de doações de exemplo. Protegido por `SEED_KEY` em env var.
+
+    Uso:
+        POST /api/admin/seed/  body: {"key": "<SEED_KEY>"}
+
+    Necessário porque o plano free do Render não tem acesso a Shell. Este
+    endpoint substitui `python populate_products.py` rodado manualmente.
+
+    Idempotente: pode chamar quantas vezes quiser, sempre resulta no mesmo
+    estado (22 doações em 6 capitais, mesmo usuário Mercado Central).
+    """
+    import os
+    expected = os.getenv('SEED_KEY')
+    if not expected:
+        return Response(
+            {'error': 'SEED_KEY não configurado no servidor.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    provided = request.data.get('key') if hasattr(request, 'data') else None
+    if not provided or provided != expected:
+        return Response({'error': 'Chave inválida.'}, status=status.HTTP_403_FORBIDDEN)
+
+    from .seed import populate
+    try:
+        result = populate()
+        return Response(result, status=status.HTTP_200_OK)
+    except Exception as exc:
+        logger.exception('Falha no seed')
+        return Response(
+            {'error': 'Falha ao popular banco.', 'detail': str(exc)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 # ---------------------------------------------------------------------------
 # Permissão: dono da própria instância
 # ---------------------------------------------------------------------------
