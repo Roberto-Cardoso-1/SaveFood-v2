@@ -30,7 +30,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "O SaveFood usa sua localização para mostrar doações próximas e marcar o ponto de coleta."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
