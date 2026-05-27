@@ -16,8 +16,6 @@ from pathlib import Path
 from typing import Optional
 
 from django.conf import settings
-from django.core.files.base import ContentFile
-
 from .models import Usuario, Doacao
 
 
@@ -117,12 +115,20 @@ CURITIBA = _city([
 ], 'Curitiba', -25.43, -49.27)
 
 
-def _find_image(basename: str) -> Optional[Path]:
-    """Procura `basename.jpg` ou .png/.jpeg/.webp em media/seeds/."""
+def _find_image_relative(basename: str) -> Optional[str]:
+    """
+    Procura `basename.jpg`/.png/.jpeg/.webp em `media/seeds/` e devolve o
+    caminho **relativo a MEDIA_ROOT** (ex: `seeds/donuts.jpg`).
+
+    Importante: a `Doacao.imagem` é um `ImageField(upload_to='doacoes/')`. Em
+    vez de gravar uma cópia em `doacoes/` (que sumiria no próximo redeploy no
+    Render Free), apontamos o campo direto para `seeds/<arquivo>`. Esses
+    arquivos estão commitados no git, então sobrevivem a redeploys.
+    """
     for ext in ('jpg', 'jpeg', 'png', 'webp'):
         candidate = SEEDS_DIR / f'{basename}.{ext}'
         if candidate.exists():
-            return candidate
+            return f'seeds/{basename}.{ext}'
     return None
 
 
@@ -156,6 +162,7 @@ def populate() -> dict:
     ok_count = 0
     fail_count = 0
     for p in todas:
+        img_relpath = _find_image_relative(p['image'])
         doacao = Doacao.objects.create(
             produto=p['produto'],
             categoria=p['categoria'],
@@ -165,17 +172,12 @@ def populate() -> dict:
             doador=doador,
             latitude=p['latitude'],
             longitude=p['longitude'],
+            # Aponta direto para media/seeds/* (commitado no git).
+            imagem=img_relpath or '',
         )
-        img_path = _find_image(p['image'])
-        if img_path:
-            with img_path.open('rb') as f:
-                doacao.imagem.save(
-                    f'prod_{doacao.id}{img_path.suffix}',
-                    ContentFile(f.read()),
-                    save=True,
-                )
+        if img_relpath:
             ok_count += 1
-            log.append(f"[OK]   [{p['cidade']}] {p['produto']}")
+            log.append(f"[OK]   [{p['cidade']}] {p['produto']} <- {img_relpath}")
         else:
             fail_count += 1
             log.append(f"[FAIL] [{p['cidade']}] {p['produto']} (sem {p['image']}.*)")
