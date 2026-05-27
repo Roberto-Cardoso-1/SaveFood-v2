@@ -34,10 +34,6 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Health-check / ping
-# ---------------------------------------------------------------------------
-
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def ping(request):
@@ -83,10 +79,6 @@ def seed_database(request):
         )
 
 
-# ---------------------------------------------------------------------------
-# Permissão: dono da própria instância
-# ---------------------------------------------------------------------------
-
 class IsSelfOrReadOnly(permissions.BasePermission):
     """Usuario só pode editar/apagar seu próprio registro."""
 
@@ -95,10 +87,6 @@ class IsSelfOrReadOnly(permissions.BasePermission):
             return True
         return getattr(request.user, 'pk', None) == obj.pk
 
-
-# ---------------------------------------------------------------------------
-# JWT — emissão custom (email + senha)
-# ---------------------------------------------------------------------------
 
 from rest_framework import serializers as drf_serializers
 from rest_framework.exceptions import AuthenticationFailed
@@ -147,10 +135,6 @@ class SaveFoodTokenView(TokenObtainPairView):
     authentication_classes: list = []
 
 
-# ---------------------------------------------------------------------------
-# Usuario
-# ---------------------------------------------------------------------------
-
 class UsuarioViewSet(viewsets.GenericViewSet,
                      mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
@@ -185,13 +169,10 @@ class UsuarioViewSet(viewsets.GenericViewSet,
             return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated()]
 
-    # -- Atualização clássica + atalho legado ---------------------------------
-
     @action(detail=True, methods=['post'], url_path='atualizar_perfil')
     def atualizar_perfil(self, request, pk=None):
         instance = self.get_object()
         data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
-        # avatar="" ou "null" significa "limpar"
         if 'avatar' in data and data['avatar'] in ('', 'null', None):
             if instance.avatar:
                 instance.avatar.delete(save=False)
@@ -202,8 +183,6 @@ class UsuarioViewSet(viewsets.GenericViewSet,
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    # -- Login legado (mantido p/ compat; o ideal é usar /api/token/) ---------
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny],
             authentication_classes=[])
@@ -223,7 +202,6 @@ class UsuarioViewSet(viewsets.GenericViewSet,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
             'user': UsuarioReadSerializer(usuario).data,
-            # Campos legados (compat com mobile antigo que lia direto do payload)
             'id': usuario.id,
             'nome': usuario.nome,
             'email': usuario.email,
@@ -235,7 +213,6 @@ class UsuarioViewSet(viewsets.GenericViewSet,
             authentication_classes=[], url_path='recuperar-senha')
     def recuperar_senha(self, request):
         email = (request.data.get('email') or '').strip().lower()
-        # Não vazamos se o e-mail existe ou não (anti-enum), só logamos
         if Usuario.objects.filter(email__iexact=email).exists():
             logger.info('Pedido de recuperação de senha para %s', email)
         return Response(
@@ -247,10 +224,6 @@ class UsuarioViewSet(viewsets.GenericViewSet,
     def me(self, request):
         return Response(UsuarioReadSerializer(request.user).data)
 
-
-# ---------------------------------------------------------------------------
-# Doacao
-# ---------------------------------------------------------------------------
 
 class DoacaoViewSet(viewsets.ModelViewSet):
     """
@@ -309,7 +282,6 @@ class DoacaoViewSet(viewsets.ModelViewSet):
         doacao.receptor = user
         doacao.save(update_fields=['status', 'receptor', 'updated_at'])
 
-        # Notificar o doador
         Notificacao.objects.create(
             usuario=doacao.doador,
             tipo=Notificacao.TIPO_MSG,
@@ -332,10 +304,6 @@ class DoacaoViewSet(viewsets.ModelViewSet):
         ser = self.get_serializer(page if page is not None else qs, many=True)
         return self.get_paginated_response(ser.data) if page is not None else Response(ser.data)
 
-
-# ---------------------------------------------------------------------------
-# Notificacao
-# ---------------------------------------------------------------------------
 
 class NotificacaoViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = NotificacaoSerializer

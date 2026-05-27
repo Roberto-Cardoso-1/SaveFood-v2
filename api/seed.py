@@ -172,7 +172,6 @@ def populate() -> dict:
             doador=doador,
             latitude=p['latitude'],
             longitude=p['longitude'],
-            # Aponta direto para media/seeds/* (commitado no git).
             imagem=img_relpath or '',
         )
         if img_relpath:

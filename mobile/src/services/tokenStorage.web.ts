@@ -1,14 +1,3 @@
-/**
- * Storage de tokens — versão WEB.
- *
- * Metro escolhe esse arquivo automaticamente quando builda para `web` por
- * causa da extensão `.web.ts`. Aqui usamos `localStorage` em vez de
- * `expo-secure-store` (que importa `import.meta` e quebra o bundle web).
- *
- * Segurança: tokens em localStorage são acessíveis a XSS — aceitável em dev e
- * web casual; em produção sensitive, considere cookies httpOnly. Para o
- * SaveFood (uso casual + foco mobile), está OK.
- */
 const ACCESS_KEY = 'savefood.access';
 const REFRESH_KEY = 'savefood.refresh';
 
@@ -24,7 +13,6 @@ function safeSet(key: string, value: string): void {
   try {
     if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
   } catch {
-    /* noop */
   }
 }
 
@@ -32,7 +20,6 @@ function safeRemove(key: string): void {
   try {
     if (typeof window !== 'undefined') window.localStorage.removeItem(key);
   } catch {
-    /* noop */
   }
 }
 

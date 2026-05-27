@@ -35,7 +35,7 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' }, // usamos o BottomTabBar custom dentro de cada tela
+        tabBarStyle: { display: 'none' },
       }}
     >
       <Tab.Screen name="Início" component={HomeScreen} />
@@ -62,7 +62,6 @@ export default function App() {
 
   useEffect(() => {
     if (!hasHydrated) return;
-    // Após o AsyncStorage rehidratar, valida a sessão com /me/ se houver token.
     let cancelled = false;
     (async () => {
       await authService.hydrate();

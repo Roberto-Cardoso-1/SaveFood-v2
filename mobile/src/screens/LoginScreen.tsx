@@ -68,7 +68,6 @@ const LoginScreen = () => {
   };
 
   const handleGoogleLogin = () => {
-    // Mock — login social ainda não está integrado no backend
     setLoadingGoogle(true);
     setTimeout(() => {
       useAuthStore.getState().setUser({

@@ -7,15 +7,10 @@ interface Props {
   visible: boolean;
   message: string;
   variant?: 'success' | 'error';
-  /** Duração total visível, em ms. Após esse tempo o toast some sozinho. */
   duration?: number;
   onHide?: () => void;
 }
 
-/**
- * Toast custom já presente no design (extraído de Login/Register).
- * Aceita variant `success` (verde) ou `error` (vermelho).
- */
 export const Toast: React.FC<Props> = ({
   visible,
   message,

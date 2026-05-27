@@ -14,10 +14,6 @@ from rest_framework import serializers
 from .models import Usuario, Doacao, Notificacao
 
 
-# ---------------------------------------------------------------------------
-# Usuario
-# ---------------------------------------------------------------------------
-
 class UsuarioReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
@@ -46,7 +42,6 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        # Sempre devolver formato "read" (sem senha)
         return UsuarioReadSerializer(instance, context=self.context).data
 
 
@@ -79,10 +74,6 @@ class UsuarioUpdateSerializer(serializers.ModelSerializer):
         return UsuarioReadSerializer(instance, context=self.context).data
 
 
-# ---------------------------------------------------------------------------
-# Doacao
-# ---------------------------------------------------------------------------
-
 class DoacaoSerializer(serializers.ModelSerializer):
     estabelecimento = serializers.CharField(source='doador.nome', read_only=True)
     doador_id = serializers.PrimaryKeyRelatedField(source='doador', read_only=True)
@@ -110,7 +101,6 @@ class DoacaoSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
-        # lat/lng vão sempre em par; se um veio, o outro também.
         lat = attrs.get('latitude')
         lng = attrs.get('longitude')
         if (lat is None) != (lng is None):
@@ -119,10 +109,6 @@ class DoacaoSerializer(serializers.ModelSerializer):
             )
         return attrs
 
-
-# ---------------------------------------------------------------------------
-# Notificacao
-# ---------------------------------------------------------------------------
 
 class NotificacaoSerializer(serializers.ModelSerializer):
     class Meta:

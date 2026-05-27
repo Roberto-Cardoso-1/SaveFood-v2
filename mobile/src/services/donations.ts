@@ -9,7 +9,6 @@ export interface ApiDonation {
   validade: string;
   status: string;
   imagem?: string | null;
-  /** Backend devolve string decimal ("-23.550500") ou null. */
   latitude?: string | null;
   longitude?: string | null;
   doador_id: number;
@@ -51,7 +50,7 @@ export const donationsService = {
     descricao?: string;
     categoria: string;
     quantidade: number;
-    validade: string; // YYYY-MM-DD
+    validade: string;
     imageUri?: string | null;
     latitude?: number | null;
     longitude?: number | null;

@@ -1,12 +1,3 @@
-/**
- * Storage seguro de tokens JWT — versão nativa (iOS/Android).
- *
- * Usa `expo-secure-store` para guardar os tokens no Keychain (iOS) ou no
- * EncryptedSharedPreferences (Android). Mais seguro que AsyncStorage.
- *
- * Há uma versão paralela `tokenStorage.web.ts` que usa `localStorage` para
- * Web (Metro resolve automaticamente pela extensão).
- */
 import * as SecureStore from 'expo-secure-store';
 
 const ACCESS_KEY = 'savefood.access';

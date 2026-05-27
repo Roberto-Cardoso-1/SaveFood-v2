@@ -32,7 +32,6 @@ const DonateScreen = () => {
   const navigation = useNavigation<any>();
   const t = useTheme();
   const fetchDonations = useDonationsStore((s) => s.fetchDonations);
-  // GPS opcional — se o usuário negar, a doação ainda é enviada sem coords.
   const { coords: gpsCoords, error: gpsError, refresh: gpsRefresh } = useUserLocation();
 
   const [titulo, setTitulo] = useState('');
@@ -279,7 +278,6 @@ const DonateScreen = () => {
             </View>
           )}
 
-          {/* 📍 Indicador de GPS — informa se a doação vai aparecer no mapa */}
           <TouchableOpacity
             onPress={gpsError ? gpsRefresh : undefined}
             activeOpacity={gpsError ? 0.7 : 1}

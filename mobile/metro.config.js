@@ -1,15 +1,3 @@
-// Configuração do Metro Bundler.
-//
-// O Zustand publica nos arquivos `esm/*.mjs` código com `import.meta.env.MODE`
-// — sintaxe que NÃO é aceita pelo bundle clássico do Expo Web (script tag) nem
-// pelo Hermes (motor JS do Android/iOS). Resultados:
-//
-//   Web:     Uncaught SyntaxError: Cannot use 'import.meta' outside a module
-//   Hermes:  SyntaxError: `import.meta` is not supported in Hermes.
-//
-// Solução: interceptar `resolveRequest` em TODAS as plataformas e redirecionar
-// `zustand` (e subpaths) para os arquivos CJS, que são funcionalmente
-// idênticos mas usam `process.env.NODE_ENV` em vez de `import.meta.env.MODE`.
 const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 
@@ -17,7 +5,6 @@ const config = getDefaultConfig(__dirname);
 
 const zustandRoot = path.resolve(__dirname, 'node_modules/zustand');
 
-// Mapa de subpath -> caminho CJS dentro de node_modules/zustand
 const zustandCjsMap = {
   zustand: path.join(zustandRoot, 'index.js'),
   'zustand/middleware': path.join(zustandRoot, 'middleware.js'),

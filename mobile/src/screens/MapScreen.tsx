@@ -41,7 +41,6 @@ import { useUserLocation } from '../hooks/useUserLocation';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Fallback: São Paulo Centro (Praça da Sé). Usado se o GPS for negado/indisponível.
 const FALLBACK_REGION: Region = {
   latitude: -23.5505,
   longitude: -46.6333,
@@ -68,7 +67,6 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Outros: Sparkles,
 };
 
-/** Estilo de mapa em dark mode (versão enxuta — só água/labels/ruas). */
 const DARK_MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#1E293B' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#94A3B8' }] },
@@ -78,7 +76,6 @@ const DARK_MAP_STYLE = [
   { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
 ];
 
-/** Haversine simplificado — distância em km entre dois pontos lat/lng. */
 function haversineKm(
   a: { latitude: number; longitude: number },
   b: { latitude: number; longitude: number },
@@ -100,7 +97,6 @@ function formatDistance(km: number): string {
   return `${Math.round(km)} km`;
 }
 
-/** Marker verde com ícone da categoria. Escala maior quando selecionado. */
 function CustomMarker({
   categoria,
   selected,
@@ -130,7 +126,6 @@ function CustomMarker({
       >
         <Icon size={selected ? 26 : 20} color="white" strokeWidth={2.5} />
       </View>
-      {/* Pino apontando pra baixo */}
       <View
         style={{
           width: 0,
@@ -173,7 +168,6 @@ const MapScreen = () => {
     fetchDonations();
   }, [fetchDonations]);
 
-  // Anima o mapa para a posição real quando o GPS chega.
   useEffect(() => {
     if (coords && mapRef.current) {
       mapRef.current.animateToRegion(
@@ -188,7 +182,6 @@ const MapScreen = () => {
     }
   }, [coords]);
 
-  // Bottom sheet anima quando selected muda.
   useEffect(() => {
     Animated.spring(slideAnim, {
       toValue: selected ? 0 : SCREEN_HEIGHT,
@@ -198,7 +191,6 @@ const MapScreen = () => {
     }).start();
   }, [selected, slideAnim]);
 
-  // Filtros: categoria + busca + tem lat/lng.
   const visibleDonations = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return donations.filter((d) => {
@@ -372,7 +364,6 @@ const MapScreen = () => {
             ))}
           </MapView>
 
-          {/* 🔍 Search + filtros overlay */}
           <View style={{ position: 'absolute', top: 12, left: 16, right: 16, zIndex: 50 }}>
             <View
               style={{
@@ -482,7 +473,6 @@ const MapScreen = () => {
             )}
           </View>
 
-          {/* 📍 Banner permissão negada */}
           {locationError === 'denied' && (
             <View
               style={{
@@ -520,7 +510,6 @@ const MapScreen = () => {
             </View>
           )}
 
-          {/* 🎯 Recenter */}
           <TouchableOpacity
             onPress={handleRecenter}
             disabled={locationLoading}
@@ -549,7 +538,6 @@ const MapScreen = () => {
             )}
           </TouchableOpacity>
 
-          {/* 🔢 Contador */}
           <View
             style={{
               position: 'absolute',
@@ -591,7 +579,6 @@ const MapScreen = () => {
             </Text>
           </View>
 
-          {/* 📋 Bottom sheet */}
           <Animated.View
             style={{
               position: 'absolute',

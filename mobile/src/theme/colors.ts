@@ -1,18 +1,8 @@
-/**
- * Tokens de cor do SaveFood.
- *
- * Mantém a identidade verde do app, e dá origem a `useTheme()` para que as
- * telas não precisem mais escrever `bg-[#0F172A]` e `text-gray-900` espalhados
- * pelo código.
- */
-
 export const palette = {
-  // Verde da marca
   brand: '#10B981',
   brandDark: '#0F9B6E',
   brandSoft: '#D1FAE5',
 
-  // Neutros — light
   white: '#FFFFFF',
   gray50: '#F9FAFB',
   gray100: '#F3F4F6',
@@ -23,7 +13,6 @@ export const palette = {
   gray700: '#374151',
   gray900: '#111827',
 
-  // Neutros — dark (slate)
   slate900: '#0F172A',
   slate800: '#1E293B',
   slate700: '#334155',
@@ -31,7 +20,6 @@ export const palette = {
   slate400: '#94A3B8',
   slate300: '#CBD5E1',
 
-  // Semânticos
   red: '#EF4444',
   redSoft: '#FEE2E2',
   amber: '#FBBF24',

@@ -81,7 +81,6 @@ const RegisterScreen = () => {
         tipo_perfil: objective,
       });
 
-      // Se o usuário escolheu um avatar local, sobe agora.
       if (avatar) {
         try {
           await authService.updateProfile({
@@ -90,7 +89,6 @@ const RegisterScreen = () => {
             isNewAvatar: true,
           });
         } catch {
-          // não bloqueia o cadastro se o avatar falhar
         }
       }
 

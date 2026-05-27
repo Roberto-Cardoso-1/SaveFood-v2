@@ -14,7 +14,6 @@ export interface Donation {
   validade?: string;
   status?: string;
   doadorId?: number;
-  /** number | undefined — parseados da string decimal vinda do backend. */
   latitude?: number;
   longitude?: number;
 }
@@ -37,8 +36,13 @@ function mapApi(d: ApiDonation, apiBase: string): Donation {
     if (d.imagem.startsWith('http')) {
       imageUrl = d.imagem;
     } else {
-      const base = apiBase.replace(/\/api\/?$/, '');
-      imageUrl = `${base}${d.imagem}`;
+      const base = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
+      const path = d.imagem.startsWith('/')
+        ? d.imagem
+        : d.imagem.startsWith('media/')
+          ? `/${d.imagem}`
+          : `/media/${d.imagem}`;
+      imageUrl = `${base}${path}`;
     }
   }
 

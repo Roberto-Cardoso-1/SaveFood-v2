@@ -19,13 +19,6 @@ interface AuthState {
   logout: () => void;
 }
 
-/**
- * Store de sessão.
- *
- * Importante: os **tokens** JWT são guardados no SecureStore (ver `services/auth.ts`),
- * não aqui. Esta store guarda apenas o usuário, para a UI saber se está logado
- * sem precisar bater na API a cada render.
- */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({

@@ -207,7 +207,6 @@ const HomeScreen = () => {
         removeLocal(id);
       } catch {
         if (Platform.OS === 'web') {
-          // eslint-disable-next-line no-alert
           window.alert('Não foi possível excluir a doação.');
         } else {
           Alert.alert('Erro', 'Não foi possível excluir a doação.');
@@ -216,8 +215,6 @@ const HomeScreen = () => {
     };
 
     if (Platform.OS === 'web') {
-      // Alert.alert no react-native-web não dispara handlers; usar window.confirm.
-      // eslint-disable-next-line no-alert
       const confirmed = typeof window !== 'undefined'
         ? window.confirm(`Tem certeza que deseja remover "${title}"?`)
         : false;
@@ -251,7 +248,6 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView className={`flex-1 ${bgColor}`}>
-      {/* 📍 Location Modal */}
       <Modal visible={showLocationModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
           <View
@@ -322,7 +318,6 @@ const HomeScreen = () => {
         </View>
       </Modal>
 
-      {/* 🏆 Ranking Modal */}
       <Modal visible={showRankingModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
           <View
@@ -434,7 +429,6 @@ const HomeScreen = () => {
         </View>
       </Modal>
 
-      {/* 🔔 Notifications Modal */}
       <Modal visible={showNotificationsModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
           <View
@@ -529,7 +523,6 @@ const HomeScreen = () => {
         </View>
       </Modal>
 
-      {/* Header */}
       <View className={`px-6 py-6 flex-row justify-between items-end ${bgColor}`}>
         <View>
           <View className="flex-row items-center mb-1">

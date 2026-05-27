@@ -16,9 +16,6 @@ urlpatterns = [
     path('api/', include('api.urls')),
 ]
 
-# Sempre servir uploads via Django.
-# Em produção real isso seria S3/Cloudinary; aqui (demo/MVP) o próprio
-# Django serve. Whitenoise não cobre media files por padrão.
 urlpatterns += [
     re_path(
         r'^media/(?P<path>.*)$',
@@ -27,6 +24,5 @@ urlpatterns += [
     ),
 ]
 
-# Em DEBUG, mantém também o helper padrão (redundante mas inofensivo).
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

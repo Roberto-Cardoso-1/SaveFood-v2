@@ -30,9 +30,6 @@ interface UiState {
   setLocationEnabled: (v: boolean) => void;
 }
 
-/**
- * Store de preferências de UI — sobrevive a reinícios do app via AsyncStorage.
- */
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({

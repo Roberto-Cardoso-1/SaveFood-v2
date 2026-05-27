@@ -1,11 +1,3 @@
-/**
- * Versão WEB do MapScreen — usada automaticamente pelo Metro quando rodando
- * em `expo start --web` (resolução por extensão `.web.tsx`).
- *
- * Por quê: `react-native-maps` importa módulos nativos (`codegenNativeCommands`,
- * etc.) que quebram o bundle em web. Isolamos esse import nessa versão e
- * mostramos um fallback informativo.
- */
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,8 +10,6 @@ const MapScreenWeb = () => {
   const t = useTheme();
   const { donations } = useDonationsStore();
 
-  // Lista das doações que TÊM coordenadas — exibimos elas em lista no web,
-  // já que não conseguimos renderizar o mapa.
   const geolocated = donations.filter((d) => d.latitude != null && d.longitude != null);
 
   return (
@@ -28,7 +18,6 @@ const MapScreenWeb = () => {
         contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={{ alignItems: 'center', marginBottom: 32, marginTop: 16 }}>
           <View
             style={{
@@ -69,7 +58,6 @@ const MapScreenWeb = () => {
           </Text>
         </View>
 
-        {/* Lista de doações geo-localizadas */}
         <View
           style={{
             flexDirection: 'row',

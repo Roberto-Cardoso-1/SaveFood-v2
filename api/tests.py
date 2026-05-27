@@ -20,10 +20,6 @@ from rest_framework.test import APIClient
 from .models import Usuario, Doacao, Notificacao
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def make_doador(email='doador@example.com', senha='senhaforte123', nome='Doador Teste'):
     u = Usuario(nome=nome, email=email, senha=senha, tipo_perfil=Usuario.PERFIL_DOADOR)
     u.save()
@@ -50,10 +46,6 @@ def amanha():
     return (timezone.localdate() + datetime.timedelta(days=1)).isoformat()
 
 
-# ---------------------------------------------------------------------------
-# Modelos
-# ---------------------------------------------------------------------------
-
 class UsuarioModelTests(TestCase):
 
     def test_senha_eh_hasheada_no_save(self):
@@ -75,10 +67,6 @@ class UsuarioModelTests(TestCase):
         self.assertEqual(u.senha, hash_original)
 
 
-# ---------------------------------------------------------------------------
-# Cadastro / login (rotas legadas e /token/)
-# ---------------------------------------------------------------------------
-
 class AuthTests(TestCase):
 
     def setUp(self):
@@ -92,7 +80,6 @@ class AuthTests(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED, resp.data)
         u = Usuario.objects.get(email='novo@example.com')
         self.assertNotEqual(u.senha, 'senhaforte123')
-        # Senha não deve aparecer no payload de resposta
         self.assertNotIn('senha', resp.data)
 
     def test_cadastro_recusa_email_duplicado(self):
@@ -127,7 +114,6 @@ class AuthTests(TestCase):
                                 format='json')
         self.assertEqual(resp.status_code, 200, resp.data)
         self.assertIn('access', resp.data)
-        # Campos legados continuam disponíveis para clientes antigos
         self.assertEqual(resp.data['nome'], 'Doador Teste')
 
     def test_recuperar_senha_responde_200_e_nao_vaza_existencia(self):
@@ -152,10 +138,6 @@ class AuthTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data['email'], u.email)
 
-
-# ---------------------------------------------------------------------------
-# Doações
-# ---------------------------------------------------------------------------
 
 class DoacoesTests(TestCase):
 
@@ -206,7 +188,6 @@ class DoacoesTests(TestCase):
                               quantidade=2, validade=timezone.localdate() + datetime.timedelta(days=2))
         resp = self.doador_client.get('/api/doacoes/?categoria=Frutas')
         self.assertEqual(resp.status_code, 200)
-        # paginated
         results = resp.data['results'] if 'results' in resp.data else resp.data
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['produto'], 'Maçã')
@@ -249,10 +230,6 @@ class DoacoesTests(TestCase):
         self.assertEqual(resp.status_code, 403)
 
 
-# ---------------------------------------------------------------------------
-# Reservar
-# ---------------------------------------------------------------------------
-
 class ReservarTests(TestCase):
 
     def setUp(self):
@@ -291,10 +268,6 @@ class ReservarTests(TestCase):
         self.assertEqual(resp.status_code, 400)
 
 
-# ---------------------------------------------------------------------------
-# Notificações
-# ---------------------------------------------------------------------------
-
 class NotificacoesTests(TestCase):
 
     def setUp(self):
@@ -324,13 +297,8 @@ class NotificacoesTests(TestCase):
         resp = client.post('/api/notificacoes/marcar-todas-lidas/')
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(Notificacao.objects.filter(usuario=self.user_a, lida=False).count(), 0)
-        # Não toca em outros
         self.assertEqual(Notificacao.objects.filter(usuario=self.user_b, lida=False).count(), 1)
 
-
-# ---------------------------------------------------------------------------
-# Perfil / minhas / recebidas
-# ---------------------------------------------------------------------------
 
 class PerfilTests(TestCase):
 

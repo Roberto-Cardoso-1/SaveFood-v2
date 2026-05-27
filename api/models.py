@@ -47,7 +47,6 @@ class Usuario(models.Model):
             self.senha = make_password(self.senha)
         super().save(*args, **kwargs)
 
-    # -- API compatível com DRF / SimpleJWT -----------------------------------
     def set_password(self, raw_password: str) -> None:
         self.senha = make_password(raw_password)
 
@@ -97,8 +96,6 @@ class Doacao(models.Model):
     )
     imagem = models.ImageField(upload_to='doacoes/', null=True, blank=True)
 
-    # Geolocalização do ponto de coleta. Opcional: doações antigas ficam null e
-    # não aparecem no mapa, mas continuam na lista da Home.
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 

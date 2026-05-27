@@ -33,9 +33,6 @@ function toAppUser(u: ApiUser): User {
 }
 
 export const authService = {
-  /**
-   * Faz login via /api/token/, salva tokens no SecureStore e popula a store.
-   */
   async login(email: string, senha: string): Promise<User> {
     const resp = await api.post<TokenResponse>('token/', { email, senha });
     const { access, refresh, user } = resp.data;
@@ -45,9 +42,6 @@ export const authService = {
     return appUser;
   },
 
-  /**
-   * Cadastra um novo usuário e em seguida loga (para já ter token).
-   */
   async register(args: {
     nome: string;
     email: string;
@@ -58,19 +52,11 @@ export const authService = {
     return this.login(args.email, args.senha);
   },
 
-  /**
-   * Solicita recuperação de senha. Backend devolve 200 mesmo se o e-mail não
-   * existir (anti-enumeração).
-   */
   async requestPasswordReset(email: string): Promise<string> {
     const resp = await api.post<{ status: string }>('usuarios/recuperar-senha/', { email });
     return resp.data.status;
   },
 
-  /**
-   * Carrega o usuário corrente a partir do token salvo. Devolve null se o
-   * token expirou ou nunca existiu.
-   */
   async hydrate(): Promise<User | null> {
     const access = await tokenStorage.getAccess();
     if (!access) return null;
@@ -91,10 +77,6 @@ export const authService = {
     useAuthStore.getState().setUser(null);
   },
 
-  /**
-   * Atualiza o perfil (nome / avatar). Aceita uma URI local de imagem ou
-   * `null` para limpar o avatar.
-   */
   async updateProfile(args: {
     userId: number;
     nome?: string;
@@ -107,7 +89,6 @@ export const authService = {
     if (avatarUri === null) {
       form.append('avatar', '');
     } else if (avatarUri && isNewAvatar) {
-      // No web, avatarUri é blob:/data:; precisamos baixá-lo como Blob.
       if (avatarUri.startsWith('blob:') || avatarUri.startsWith('data:')) {
         const blob = await (await fetch(avatarUri)).blob();
         form.append('avatar', blob, `avatar_${Date.now()}.jpg`);
@@ -132,7 +113,6 @@ export const authService = {
   },
 };
 
-// Registrar callback de auth error → logout silencioso.
 setAuthCallbacks({
   onAuthError: () => {
     void authService.logout();
