@@ -1,6 +1,8 @@
 asgiref==3.11.1
 Django==6.0.4
 djangorestframework==3.17.1
+djangorestframework-simplejwt==5.5.1
+django-filter==25.2
 sqlparse==0.5.5
 tzdata==2026.2
 python-dotenv==1.2.2
@@ -10,3 +12,7 @@ gunicorn
 whitenoise
 dj-database-url
 psycopg2-binary
+
+# Dev / test
+pytest==8.4.2
+pytest-django==4.11.1

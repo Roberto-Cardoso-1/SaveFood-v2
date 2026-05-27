@@ -1,83 +1,90 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
-import { Home, Heart, Map, User, PlusCircle } from 'lucide-react-native';
+import { View, TouchableOpacity, Platform } from 'react-native';
+import { Home, Map, User, PlusCircle, LucideIcon } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAppStore } from '../store/useAppStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { useTheme } from '../hooks/useTheme';
+
+interface TabConfig {
+  label: string;
+  icon: LucideIcon;
+  doadorOnly?: boolean;
+}
+
+const TABS: TabConfig[] = [
+  { label: 'Início', icon: Home },
+  { label: 'Doar', icon: PlusCircle, doadorOnly: true },
+  { label: 'Mapa', icon: Map },
+  { label: 'Perfil', icon: User },
+];
 
 interface TabItemProps {
   label: string;
-  icon: any;
-  active?: boolean;
+  icon: LucideIcon;
+  active: boolean;
   onPress: () => void;
-  isDarkMode: boolean;
 }
 
-const TabItem: React.FC<TabItemProps> = ({ label, icon: Icon, active, onPress, isDarkMode }) => (
-  <TouchableOpacity 
-    onPress={onPress} 
-    activeOpacity={0.7}
-    className="items-center justify-center py-2 px-4"
-  >
-    <View className={`p-2 rounded-2xl ${active ? (isDarkMode ? 'bg-green-500/20' : 'bg-green-50') : 'bg-transparent'}`}>
-      <Icon size={22} color={active ? '#10B981' : (isDarkMode ? '#64748B' : '#9CA3AF')} strokeWidth={active ? 2.5 : 2} />
-    </View>
-    {active && (
-      <View className="w-1 h-1 bg-green-500 rounded-full mt-1" />
-    )}
-  </TouchableOpacity>
-);
+const TabItem: React.FC<TabItemProps> = ({ icon: Icon, active, onPress }) => {
+  const t = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="tab"
+      className="items-center justify-center py-2 px-4"
+    >
+      <View
+        className={`p-2 rounded-2xl ${
+          active ? (t.isDark ? 'bg-green-500/20' : 'bg-green-50') : 'bg-transparent'
+        }`}
+      >
+        <Icon
+          size={22}
+          color={active ? t.brand : t.isDark ? '#64748B' : '#9CA3AF'}
+          strokeWidth={active ? 2.5 : 2}
+        />
+      </View>
+      {active && <View className="w-1 h-1 bg-green-500 rounded-full mt-1" />}
+    </TouchableOpacity>
+  );
+};
 
-export const BottomTabBar = ({ activeTab = 'Início' }) => {
+interface Props {
+  activeTab?: string;
+}
+
+export const BottomTabBar: React.FC<Props> = ({ activeTab = 'Início' }) => {
   const navigation = useNavigation<any>();
-  const { isDarkMode, user } = useAppStore();
-  const isDoador = user?.tipo_perfil?.toLowerCase() === 'doador';
-
-  const bgColor = isDarkMode ? 'bg-[#1E293B]/90' : 'bg-white/90';
-  const borderColor = isDarkMode ? 'border-white/10' : 'border-gray-100';
-  const shadowColor = isDarkMode ? 'shadow-black' : 'shadow-gray-200';
+  const user = useAuthStore((s) => s.user);
+  const t = useTheme();
+  const isDoador = user?.tipo_perfil === 'Doador';
 
   return (
-    <View 
-      className={`absolute bottom-6 left-6 right-6 ${bgColor} flex-row justify-around items-center px-4 py-3 rounded-[32px] border ${borderColor} shadow-xl ${shadowColor}`}
-      style={{
-        ...Platform.select({
-          web: {
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-          }
-        })
-      }}
+    <View
+      className={`absolute bottom-6 left-6 right-6 ${
+        t.isDark ? 'bg-[#1E293B]/90' : 'bg-white/90'
+      } flex-row justify-around items-center px-4 py-3 rounded-[32px] border ${
+        t.isDark ? 'border-white/10' : 'border-gray-100'
+      } shadow-xl ${t.isDark ? 'shadow-black' : 'shadow-gray-200'}`}
+      style={
+        Platform.OS === 'web'
+          ? ({
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+            } as any)
+          : undefined
+      }
     >
-      <TabItem 
-        label="Início" 
-        icon={Home} 
-        active={activeTab === 'Início'} 
-        onPress={() => navigation.navigate('Início')}
-        isDarkMode={isDarkMode}
-      />
-      {isDoador && (
-        <TabItem 
-          label="Doar" 
-          icon={PlusCircle} 
-          active={activeTab === 'Doar'} 
-          onPress={() => navigation.navigate('Doar')}
-          isDarkMode={isDarkMode}
+      {TABS.filter((tab) => !tab.doadorOnly || isDoador).map((tab) => (
+        <TabItem
+          key={tab.label}
+          label={tab.label}
+          icon={tab.icon}
+          active={activeTab === tab.label}
+          onPress={() => navigation.navigate(tab.label)}
         />
-      )}
-      <TabItem 
-        label="Mapa" 
-        icon={Map} 
-        active={activeTab === 'Mapa'} 
-        onPress={() => navigation.navigate('Mapa')}
-        isDarkMode={isDarkMode}
-      />
-      <TabItem 
-        label="Perfil" 
-        icon={User} 
-        active={activeTab === 'Perfil'} 
-        onPress={() => navigation.navigate('Perfil')}
-        isDarkMode={isDarkMode}
-      />
+      ))}
     </View>
   );
 };

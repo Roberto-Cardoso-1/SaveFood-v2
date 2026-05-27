@@ -1,9 +1,16 @@
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 db.sqlite3
 .env
+.env.local
+.env.*.local
 mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
 .expo/
 dist/
 npm-debug.log*
@@ -11,3 +18,19 @@ yarn-debug.log*
 yarn-error.log*
 .DS_Store
 *.swp
+
+# Mídia gerada por upload — não versionar.
+# Exceção: media/seeds/ contém fixtures de imagens usadas pelo populate_products.py.
+media/*
+!media/seeds/
+!media/seeds/**
+
+# Coverage / pytest
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/

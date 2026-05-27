@@ -2,27 +2,24 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check, Leaf, Share2 } from 'lucide-react-native';
-import { Button } from '../components/Button';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAppStore } from '../store/useAppStore';
-import { styled } from 'nativewind';
-
-const StyledSafeAreaView = styled(SafeAreaView);
+import { Button } from '../components/Button';
+import { useTheme } from '../hooks/useTheme';
 
 const ConfirmationScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const isDarkMode = useAppStore((state) => state.isDarkMode);
+  const t = useTheme();
   const { title, quantity } = route.params || { title: 'Item', quantity: '1' };
 
-  const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
-  const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
-  const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
-  const cardColor = isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50';
-  const borderColor = isDarkMode ? 'border-[#334155]' : 'border-gray-100';
+  const bgColor = t.isDark ? 'bg-[#0F172A]' : 'bg-white';
+  const textColor = t.isDark ? 'text-white' : 'text-gray-900';
+  const subTextColor = t.isDark ? 'text-gray-400' : 'text-gray-500';
+  const cardColor = t.isDark ? 'bg-[#1E293B]' : 'bg-gray-50';
+  const borderColor = t.isDark ? 'border-[#334155]' : 'border-gray-100';
 
   return (
-    <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
+    <SafeAreaView className={`flex-1 ${bgColor}`}>
       <View className="flex-1 px-6 justify-center items-center">
         <View className="w-24 h-24 bg-green-500 rounded-full items-center justify-center mb-6">
           <Check size={48} color="white" strokeWidth={3} />
@@ -47,7 +44,11 @@ const ConfirmationScreen = () => {
           </View>
         </View>
 
-        <View className={`flex-row items-center ${isDarkMode ? 'bg-green-500/10' : 'bg-green-50'} px-4 py-2 rounded-full mb-12`}>
+        <View
+          className={`flex-row items-center ${
+            t.isDark ? 'bg-green-500/10' : 'bg-green-50'
+          } px-4 py-2 rounded-full mb-12`}
+        >
           <Leaf size={16} color="#10B981" fill="#10B981" />
           <Text className="text-green-600 font-bold text-xs ml-2">
             ACABOU DE EVITAR 0.5KG DE CO2
@@ -57,18 +58,24 @@ const ConfirmationScreen = () => {
         <View className="w-full" style={{ gap: 16 }}>
           <Button title="Ver Minhas Doações" onPress={() => navigation.navigate('Início')} />
           <TouchableOpacity
-            className={`w-full py-4 rounded-xl flex-row items-center justify-center border ${isDarkMode ? 'border-[#334155]' : 'border-gray-200'}`}
+            className={`w-full py-4 rounded-xl flex-row items-center justify-center border ${
+              t.isDark ? 'border-[#334155]' : 'border-gray-200'
+            }`}
           >
-            <Share2 size={20} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
-            <Text className={`${isDarkMode ? 'text-gray-300' : 'text-gray-500'} font-bold ml-2`}>Partilhar Impacto</Text>
+            <Share2 size={20} color={t.isDark ? '#94A3B8' : '#6B7280'} />
+            <Text className={`${t.isDark ? 'text-gray-300' : 'text-gray-500'} font-bold ml-2`}>
+              Partilhar Impacto
+            </Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity className="mt-8" onPress={() => navigation.navigate('Início')}>
-          <Text className={`${isDarkMode ? 'text-gray-500' : 'text-gray-400'} font-medium`}>Voltar para o início</Text>
+          <Text className={`${t.isDark ? 'text-gray-500' : 'text-gray-400'} font-medium`}>
+            Voltar para o início
+          </Text>
         </TouchableOpacity>
       </View>
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 };
 

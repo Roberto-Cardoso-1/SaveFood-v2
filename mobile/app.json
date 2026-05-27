@@ -9,14 +9,29 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "O SaveFood usa sua localização para mostrar doações próximas no mapa e marcar o ponto de coleta quando você publica uma doação."
+      }
     },
     "android": {
-      "package": "com.savefood.app"
+      "package": "com.savefood.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "O SaveFood usa sua localização para mostrar doações próximas e marcar o ponto de coleta."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "9cc918b3-3270-46e8-9974-7dff8afa10db"

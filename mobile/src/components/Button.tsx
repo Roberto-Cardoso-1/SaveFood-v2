@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, TouchableOpacityProps, ActivityIndicator, View } from 'react-native';
-import { useAppStore } from '../store/useAppStore';
+import { TouchableOpacity, Text, TouchableOpacityProps, ActivityIndicator } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -8,56 +8,56 @@ interface ButtonProps extends TouchableOpacityProps {
   loading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({ 
-  title, 
-  variant = 'primary', 
-  loading = false, 
-  ...props 
+export const Button: React.FC<ButtonProps> = ({
+  title,
+  variant = 'primary',
+  loading = false,
+  ...props
 }) => {
-  const isDarkMode = useAppStore((state) => state.isDarkMode);
+  const t = useTheme();
 
-  const getVariantStyles = () => {
+  const styles = (() => {
     switch (variant) {
       case 'primary':
         return 'bg-green-500 active:bg-green-600';
       case 'secondary':
-        return isDarkMode ? 'bg-[#334155] active:bg-[#475569]' : 'bg-gray-100 active:bg-gray-200';
+        return t.isDark
+          ? 'bg-[#334155] active:bg-[#475569]'
+          : 'bg-gray-100 active:bg-gray-200';
       case 'outline':
-        return `bg-transparent border-2 ${isDarkMode ? 'border-[#334155]' : 'border-gray-100'} active:${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`;
+        return `bg-transparent border-2 ${t.isDark ? 'border-[#334155]' : 'border-gray-100'}`;
       case 'ghost':
-        return `bg-transparent active:${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`;
-      default:
-        return 'bg-green-500 active:bg-green-600';
+        return 'bg-transparent';
     }
-  };
+  })();
 
-  const getTextStyle = () => {
+  const textClass = (() => {
     switch (variant) {
       case 'primary':
         return 'text-white';
       case 'outline':
       case 'ghost':
-        return isDarkMode ? 'text-gray-300' : 'text-gray-700';
+        return t.isDark ? 'text-gray-300' : 'text-gray-700';
       case 'secondary':
-        return isDarkMode ? 'text-white' : 'text-gray-900';
-      default:
-        return isDarkMode ? 'text-white' : 'text-gray-900';
+        return t.isDark ? 'text-white' : 'text-gray-900';
     }
-  };
+  })();
+
+  const disabled = !!(props.disabled || loading);
 
   return (
     <TouchableOpacity
       activeOpacity={0.6}
-      className={`w-full py-4 rounded-2xl items-center justify-center flex-row transition-all ${getVariantStyles()} ${props.disabled || loading ? 'opacity-60' : ''}`}
       {...props}
-      disabled={props.disabled || loading}
+      disabled={disabled}
+      className={`w-full py-4 rounded-2xl items-center justify-center flex-row ${styles} ${
+        disabled ? 'opacity-60' : ''
+      }`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? 'white' : '#10B981'} />
+        <ActivityIndicator color={variant === 'primary' ? 'white' : t.brand} />
       ) : (
-        <Text className={`text-base font-extrabold tracking-tight ${getTextStyle()}`}>
-          {title}
-        </Text>
+        <Text className={`text-base font-extrabold tracking-tight ${textClass}`}>{title}</Text>
       )}
     </TouchableOpacity>
   );

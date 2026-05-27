@@ -1,40 +1,36 @@
-from django.urls import path
-from .views import UsuarioViewSet, DoacaoViewSet, ping
+"""URLs da API SaveFood."""
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
-usuario_list = UsuarioViewSet.as_view({
-    'get': 'list',
-    'post': 'create'
-})
-usuario_detail = UsuarioViewSet.as_view({
-    'get': 'retrieve',
-    'put': 'update',
-    'patch': 'partial_update',
-    'delete': 'destroy'
-})
+from .views import (
+    UsuarioViewSet,
+    DoacaoViewSet,
+    NotificacaoViewSet,
+    SaveFoodTokenView,
+    ping,
+)
 
-usuario_atualizar_perfil = UsuarioViewSet.as_view({
-    'post': 'atualizar_perfil'
-})
+router = DefaultRouter(trailing_slash=True)
+router.register(r'usuarios', UsuarioViewSet, basename='usuario')
+router.register(r'doacoes', DoacaoViewSet, basename='doacao')
+router.register(r'notificacoes', NotificacaoViewSet, basename='notificacao')
 
-usuario_login = UsuarioViewSet.as_view({
-    'post': 'login'
-})
-
-usuario_recuperar_senha = UsuarioViewSet.as_view({
-    'post': 'recuperar_senha'
-})
-
-doacao_list = DoacaoViewSet.as_view({
-    'get': 'list',
-    'post': 'create'
-})
+# Alias legado: o mobile antigo chamava `recuperar_senha/` (underscore). O
+# DefaultRouter expõe `recuperar-senha/` (hífen) baseado no nome da action.
+# Garantimos os dois caminhos.
+usuario_recuperar_senha_legacy = UsuarioViewSet.as_view({'post': 'recuperar_senha'})
 
 urlpatterns = [
     path('ping/', ping, name='ping'),
-    path('usuarios/', usuario_list, name='usuario-list'),
-    path('usuarios/login/', usuario_login, name='usuario-login'),
-    path('usuarios/recuperar-senha/', usuario_recuperar_senha, name='usuario-recuperar-senha'),
-    path('usuarios/<int:pk>/', usuario_detail, name='usuario-detail'),
-    path('usuarios/<int:pk>/atualizar_perfil/', usuario_atualizar_perfil, name='usuario-atualizar-perfil'),
-    path('doacoes/', doacao_list, name='doacao-list'),
+
+    # JWT
+    path('token/', SaveFoodTokenView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
+    # Alias legado (deve vir antes do include do router)
+    path('usuarios/recuperar_senha/', usuario_recuperar_senha_legacy, name='usuario-recuperar-senha-legacy'),
+
+    path('', include(router.urls)),
 ]

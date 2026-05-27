@@ -1,48 +1,118 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Switch, Alert, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Modal,
+  Switch,
+  Alert,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MapPin, ShoppingBag, Leaf, User, Clock, Settings, LogOut, ChevronRight, X, Shield, Bell, HelpCircle, Camera, Trash2 } from 'lucide-react-native';
+import {
+  MapPin,
+  ShoppingBag,
+  Leaf,
+  User,
+  Clock,
+  Settings,
+  LogOut,
+  ChevronRight,
+  X,
+  Shield,
+  Bell,
+  Camera,
+  Trash2,
+} from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
-import { useAppStore } from '../store/useAppStore';
-import { styled } from 'nativewind';
-import * as ImagePicker from 'expo-image-picker';
-import api from '../services/api';
+import { useAuthStore } from '../store/useAuthStore';
+import { useUiStore } from '../store/useUiStore';
+import { authService } from '../services/auth';
+import { donationsService, ApiDonation } from '../services/donations';
+import { useTheme } from '../hooks/useTheme';
 
-const StyledSafeAreaView = styled(SafeAreaView);
+interface MenuItemProps {
+  icon: any;
+  label: string;
+  isLast?: boolean;
+  danger?: boolean;
+  onPress?: () => void;
+  isDarkMode: boolean;
+}
 
-const MenuItem: React.FC<{ icon: any; label: string; isLast?: boolean; danger?: boolean; onPress?: () => void; isDarkMode: boolean }> = ({ icon: Icon, label, isLast, danger, onPress, isDarkMode }) => (
-  <TouchableOpacity 
+const MenuItem: React.FC<MenuItemProps> = ({
+  icon: Icon,
+  label,
+  isLast,
+  danger,
+  onPress,
+  isDarkMode,
+}) => (
+  <TouchableOpacity
     onPress={onPress}
-    className={`flex-row items-center py-4 ${!isLast ? `border-b ${isDarkMode ? 'border-[#334155]' : 'border-gray-100'}` : ''}`}
+    className={`flex-row items-center py-4 ${
+      !isLast ? `border-b ${isDarkMode ? 'border-[#334155]' : 'border-gray-100'}` : ''
+    }`}
   >
-    <View className={`w-10 h-10 rounded-xl items-center justify-center ${danger ? 'bg-red-500/10' : isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`}>
+    <View
+      className={`w-10 h-10 rounded-xl items-center justify-center ${
+        danger ? 'bg-red-500/10' : isDarkMode ? 'bg-white/5' : 'bg-gray-50'
+      }`}
+    >
       <Icon size={20} color={danger ? '#EF4444' : isDarkMode ? '#94A3B8' : '#6B7280'} />
     </View>
-    <Text className={`flex-1 ml-4 font-medium text-base ${danger ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>{label}</Text>
+    <Text
+      className={`flex-1 ml-4 font-medium text-base ${
+        danger ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'
+      }`}
+    >
+      {label}
+    </Text>
     <ChevronRight size={20} color={danger ? '#EF4444' : isDarkMode ? '#475569' : '#9CA3AF'} />
   </TouchableOpacity>
 );
 
 const ProfileScreen = () => {
-  const { user, logout, isDarkMode, updateUser } = useAppStore();
-  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const t = useTheme();
+  const user = useAuthStore((s) => s.user);
+  const ui = useUiStore();
+
+  const [activeModal, setActiveModal] = useState<'dados' | 'historico' | 'config' | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const [tempName, setTempName] = useState(user?.name || '');
-  const [tempAvatar, setTempAvatar] = useState(user?.avatar || null);
 
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [locationEnabled, setLocationEnabled] = useState(true);
+  const [tempName, setTempName] = useState(user?.name || '');
+  const [tempAvatar, setTempAvatar] = useState<string | null>(user?.avatar || null);
+  const [tempAvatarChanged, setTempAvatarChanged] = useState(false);
+
+  const [history, setHistory] = useState<ApiDonation[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     if (activeModal === 'dados') {
       setTempName(user?.name || '');
       setTempAvatar(user?.avatar || null);
+      setTempAvatarChanged(false);
       setIsEditing(false);
     }
+  }, [activeModal, user]);
+
+  useEffect(() => {
+    if (activeModal !== 'historico' || !user) return;
+    setHistoryLoading(true);
+    const loader =
+      user.tipo_perfil === 'Doador'
+        ? donationsService.myDonations()
+        : donationsService.receivedDonations();
+    loader
+      .then(setHistory)
+      .catch(() => setHistory([]))
+      .finally(() => setHistoryLoading(false));
   }, [activeModal, user]);
 
   const pickImage = async () => {
@@ -51,25 +121,23 @@ const ProfileScreen = () => {
       Alert.alert('Permissão necessária', 'Precisamos de acesso às suas fotos.');
       return;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
-
     if (!result.canceled) {
       setTempAvatar(result.assets[0].uri);
+      setTempAvatarChanged(true);
     }
   };
 
   const handleSaveProfile = async () => {
-    if (!tempName) {
+    if (!tempName.trim()) {
       Alert.alert('Erro', 'O nome não pode estar vazio.');
       return;
     }
-
     if (!user?.id) {
       Alert.alert('Erro', 'Sessão expirada. Entre novamente.');
       return;
@@ -77,65 +145,27 @@ const ProfileScreen = () => {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('nome', tempName);
-      
-      // No PC (Web), as URIs começam com 'blob:' ou 'data:'. No mobile, são caminhos de arquivo.
-      const isNewLocalImage = tempAvatar && (
-        tempAvatar.startsWith('blob:') || 
-        tempAvatar.startsWith('data:') || 
-        (!tempAvatar.startsWith('http') && Platform.OS !== 'web')
-      );
-
-      if (isNewLocalImage) {
-        if (Platform.OS === 'web') {
-          const response = await fetch(tempAvatar!);
-          const blob = await response.blob();
-          const fileName = `avatar_${Date.now()}.jpg`;
-          formData.append('avatar', blob, fileName);
-        } else {
-          const uriParts = tempAvatar!.split('.');
-          const fileType = uriParts[uriParts.length - 1];
-          const fileName = `avatar_${Date.now()}.${fileType}`;
-          
-          formData.append('avatar', {
-            uri: tempAvatar,
-            name: fileName,
-            type: `image/${fileType === 'jpg' ? 'jpeg' : fileType}`,
-          } as any);
-        }
-      } else if (tempAvatar === null) {
-        formData.append('avatar', '');
-      }
-
-      const response = await api.post(`usuarios/${user.id}/atualizar_perfil/`, formData, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data',
-        }
+      const avatarChanged = tempAvatarChanged || tempAvatar === null;
+      await authService.updateProfile({
+        userId: user.id,
+        nome: tempName.trim(),
+        avatarUri: tempAvatar,
+        isNewAvatar: tempAvatarChanged,
       });
-
-      if (response.status === 200 || response.status === 201) {
-        const updatedUser = response.data;
-        let avatarUrl = updatedUser.avatar;
-        if (avatarUrl && !avatarUrl.startsWith('http')) {
-          avatarUrl = `${api.defaults.baseURL.replace('/api/', '')}${avatarUrl}`;
-        }
-
-        updateUser({ 
-          name: updatedUser.nome, 
-          avatar: avatarUrl || undefined 
-        });
-        
-        setIsEditing(false);
-        Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
-      }
-    } catch (err: any) {
-      console.error('Erro ao salvar perfil:', err.response?.data || err.message);
+      setIsEditing(false);
+      Alert.alert('Sucesso', 'Perfil salvo com sucesso!');
+    } catch {
       Alert.alert('Erro', 'Falha ao salvar. Verifique sua conexão.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Sair', 'Deseja realmente sair da conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => authService.logout() },
+    ]);
   };
 
   const getInitials = (name: string) => {
@@ -147,11 +177,11 @@ const ProfileScreen = () => {
     return parts[0][0].toUpperCase();
   };
 
-  const bgColor = isDarkMode ? 'bg-[#0F172A]' : 'bg-white';
-  const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
-  const subTextColor = isDarkMode ? 'text-gray-400' : 'text-gray-500';
-  const cardColor = isDarkMode ? 'bg-[#1E293B]' : 'bg-gray-50';
-  const borderColor = isDarkMode ? 'border-[#334155]' : 'border-gray-100';
+  const bgColor = t.isDark ? 'bg-[#0F172A]' : 'bg-white';
+  const textColor = t.isDark ? 'text-white' : 'text-gray-900';
+  const subTextColor = t.isDark ? 'text-gray-400' : 'text-gray-500';
+  const cardColor = t.isDark ? 'bg-[#1E293B]' : 'bg-gray-50';
+  const borderColor = t.isDark ? 'border-[#334155]' : 'border-gray-100';
 
   const renderModalContent = () => {
     switch (activeModal) {
@@ -160,32 +190,44 @@ const ProfileScreen = () => {
           <View className="px-6 flex-1">
             <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
               {isEditing ? (
-                <View className="space-y-6">
+                <View style={{ gap: 24 }}>
                   <View className="items-center mb-8">
                     <View className="relative">
                       {tempAvatar ? (
-                        <Image source={{ uri: tempAvatar }} className="w-32 h-32 rounded-full border-4 border-green-500/20" />
+                        <Image
+                          source={{ uri: tempAvatar }}
+                          className="w-32 h-32 rounded-full border-4 border-green-500/20"
+                        />
                       ) : (
                         <View className="w-32 h-32 rounded-full bg-green-500 items-center justify-center border-4 border-green-500/20">
-                          <Text className="text-white text-4xl font-black">{getInitials(tempName)}</Text>
+                          <Text className="text-white text-4xl font-black">
+                            {getInitials(tempName)}
+                          </Text>
                         </View>
                       )}
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={pickImage}
                         className="absolute bottom-0 right-0 w-10 h-10 bg-green-500 rounded-full border-4 border-white items-center justify-center shadow-lg"
                       >
                         <Camera size={18} color="white" />
                       </TouchableOpacity>
                       {tempAvatar && (
-                        <TouchableOpacity 
-                          onPress={() => setTempAvatar(null)}
+                        <TouchableOpacity
+                          onPress={() => {
+                            setTempAvatar(null);
+                            setTempAvatarChanged(true);
+                          }}
                           className="absolute top-0 right-0 w-8 h-8 bg-red-500 rounded-full border-2 border-white items-center justify-center shadow-lg"
                         >
                           <Trash2 size={14} color="white" />
                         </TouchableOpacity>
                       )}
                     </View>
-                    <Text className={`${subTextColor} text-[10px] font-black uppercase mt-4 tracking-widest text-center`}>Toque para alterar a foto</Text>
+                    <Text
+                      className={`${subTextColor} text-[10px] font-black uppercase mt-4 tracking-widest text-center`}
+                    >
+                      Toque para alterar a foto
+                    </Text>
                   </View>
 
                   <Input
@@ -196,8 +238,12 @@ const ProfileScreen = () => {
                   />
 
                   <View className="mt-8">
-                    <Button title="SALVAR ALTERAÇÕES" loading={loading} onPress={handleSaveProfile} />
-                    <TouchableOpacity 
+                    <Button
+                      title="SALVAR ALTERAÇÕES"
+                      loading={loading}
+                      onPress={handleSaveProfile}
+                    />
+                    <TouchableOpacity
                       onPress={() => setIsEditing(false)}
                       className="w-full py-4 items-center"
                     >
@@ -208,25 +254,39 @@ const ProfileScreen = () => {
               ) : (
                 <>
                   <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} mb-6`}>
-                    <Text className={`${subTextColor} text-[10px] font-black uppercase tracking-widest mb-4`}>Informações da Conta</Text>
-                    <View className="space-y-4">
+                    <Text
+                      className={`${subTextColor} text-[10px] font-black uppercase tracking-widest mb-4`}
+                    >
+                      Informações da Conta
+                    </Text>
+                    <View style={{ gap: 12 }}>
                       <View>
                         <Text className={`${subTextColor} text-xs mb-1`}>Nome Completo</Text>
                         <Text className={`${textColor} font-bold text-base`}>{user?.name}</Text>
                       </View>
-                      <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
+                      <View
+                        className={`h-[1px] ${
+                          t.isDark ? 'bg-white/10' : 'bg-gray-200/50'
+                        } my-2`}
+                      />
                       <View>
                         <Text className={`${subTextColor} text-xs mb-1`}>E-mail de Acesso</Text>
                         <Text className={`${textColor} font-bold text-base`}>{user?.email}</Text>
                       </View>
-                      <View className={`h-[1px] ${isDarkMode ? 'bg-white/10' : 'bg-gray-200/50'} my-2`} />
+                      <View
+                        className={`h-[1px] ${
+                          t.isDark ? 'bg-white/10' : 'bg-gray-200/50'
+                        } my-2`}
+                      />
                       <View>
                         <Text className={`${subTextColor} text-xs mb-1`}>Tipo de Perfil</Text>
-                        <Text className="text-green-600 font-bold text-base uppercase">{user?.tipo_perfil || 'Doador'}</Text>
+                        <Text className="text-green-600 font-bold text-base uppercase">
+                          {user?.tipo_perfil || 'Doador'}
+                        </Text>
                       </View>
                     </View>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setIsEditing(true)}
                     className="bg-green-500 py-4 rounded-2xl items-center shadow-lg shadow-green-500/20"
                   >
@@ -240,24 +300,58 @@ const ProfileScreen = () => {
       case 'historico':
         return (
           <ScrollView className="px-6" showsVerticalScrollIndicator={false}>
-            {[
-              { id: 1, item: 'Cesta de Frutas', data: '14 Mai', local: 'Hortifruti', status: 'Finalizado' },
-              { id: 2, item: 'Pães Artesanais', data: '12 Mai', local: 'Padaria Central', status: 'Finalizado' },
-              { id: 3, item: 'Iogurte Natural', data: '10 Mai', local: 'Mini Mercado', status: 'Cancelado' },
-            ].map((hist) => (
-              <View key={hist.id} className={`${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'} p-4 rounded-3xl border ${borderColor} mb-4 flex-row items-center`}>
-                <View className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${hist.status === 'Cancelado' ? 'bg-red-500/10' : 'bg-green-500/10'}`}>
-                  <ShoppingBag size={20} color={hist.status === 'Cancelado' ? '#EF4444' : '#10B981'} />
-                </View>
-                <View className="flex-1">
-                  <Text className={`${textColor} font-bold`}>{hist.item}</Text>
-                  <Text className={`${subTextColor} text-xs`}>{hist.local} • {hist.data}</Text>
-                </View>
-                <View className={`px-3 py-1 rounded-full ${hist.status === 'Cancelado' ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
-                  <Text className={`text-[9px] font-black uppercase ${hist.status === 'Cancelado' ? 'text-red-600' : 'text-green-600'}`}>{hist.status}</Text>
-                </View>
+            {historyLoading ? (
+              <View className="items-center py-10">
+                <Text className={`${subTextColor} font-bold text-sm`}>Carregando...</Text>
               </View>
-            ))}
+            ) : history.length === 0 ? (
+              <View className="items-center py-10">
+                <Text
+                  className={`${subTextColor} font-bold text-xs uppercase tracking-widest`}
+                >
+                  Sem registros ainda.
+                </Text>
+              </View>
+            ) : (
+              history.map((d) => (
+                <View
+                  key={d.id}
+                  className={`${
+                    t.isDark ? 'bg-[#1E293B]' : 'bg-white'
+                  } p-4 rounded-3xl border ${borderColor} mb-4 flex-row items-center`}
+                >
+                  <View
+                    className={`w-12 h-12 rounded-2xl items-center justify-center mr-4 ${
+                      d.status === 'entregue' ? 'bg-green-500/10' : 'bg-amber-500/10'
+                    }`}
+                  >
+                    <ShoppingBag
+                      size={20}
+                      color={d.status === 'entregue' ? '#10B981' : '#F59E0B'}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`${textColor} font-bold`}>{d.produto}</Text>
+                    <Text className={`${subTextColor} text-xs`}>
+                      {d.estabelecimento} • {new Date(d.created_at).toLocaleDateString('pt-BR')}
+                    </Text>
+                  </View>
+                  <View
+                    className={`px-3 py-1 rounded-full ${
+                      d.status === 'entregue' ? 'bg-green-500/20' : 'bg-amber-500/20'
+                    }`}
+                  >
+                    <Text
+                      className={`text-[9px] font-black uppercase ${
+                        d.status === 'entregue' ? 'text-green-600' : 'text-amber-600'
+                      }`}
+                    >
+                      {d.status}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
           </ScrollView>
         );
       case 'config':
@@ -266,24 +360,32 @@ const ProfileScreen = () => {
             <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} mb-6`}>
               <View className="flex-row items-center justify-between mb-6">
                 <View className="flex-row items-center">
-                  <Bell size={20} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
+                  <Bell size={20} color={t.isDark ? '#94A3B8' : '#6B7280'} />
                   <Text className={`ml-3 ${textColor} font-bold`}>Notificações Push</Text>
                 </View>
-                <Switch value={pushEnabled} onValueChange={setPushEnabled} trackColor={{ true: '#10B981', false: '#334155' }} />
+                <Switch
+                  value={ui.pushEnabled}
+                  onValueChange={ui.setPushEnabled}
+                  trackColor={{ true: '#10B981', false: '#334155' }}
+                />
               </View>
               <View className="flex-row items-center justify-between mb-6">
                 <View className="flex-row items-center">
-                  <MapPin size={20} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
+                  <MapPin size={20} color={t.isDark ? '#94A3B8' : '#6B7280'} />
                   <Text className={`ml-3 ${textColor} font-bold`}>Localização em Tempo Real</Text>
                 </View>
-                <Switch value={locationEnabled} onValueChange={setLocationEnabled} trackColor={{ true: '#10B981', false: '#334155' }} />
+                <Switch
+                  value={ui.locationEnabled}
+                  onValueChange={ui.setLocationEnabled}
+                  trackColor={{ true: '#10B981', false: '#334155' }}
+                />
               </View>
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center">
-                  <Shield size={20} color={isDarkMode ? '#94A3B8' : '#6B7280'} />
+                  <Shield size={20} color={t.isDark ? '#94A3B8' : '#6B7280'} />
                   <Text className={`ml-3 ${textColor} font-bold`}>Privacidade de Dados</Text>
                 </View>
-                <ChevronRight size={20} color={isDarkMode ? '#475569' : '#D1D5DB'} />
+                <ChevronRight size={20} color={t.isDark ? '#475569' : '#D1D5DB'} />
               </View>
             </View>
           </View>
@@ -294,16 +396,34 @@ const ProfileScreen = () => {
   };
 
   return (
-    <StyledSafeAreaView className={`flex-1 ${bgColor}`}>
-      <Modal visible={!!activeModal} animationType="slide" transparent={true}>
+    <SafeAreaView className={`flex-1 ${bgColor}`}>
+      <Modal visible={!!activeModal} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-end">
-          <View className={`${isDarkMode ? 'bg-[#0F172A]' : 'bg-white'} rounded-t-[40px] h-[85%] pt-8`}>
+          <View
+            className={`${t.isDark ? 'bg-[#0F172A]' : 'bg-white'} rounded-t-[40px] h-[85%] pt-8`}
+          >
             <View className="flex-row justify-between items-center px-6 mb-8">
-              <Text className={`text-3xl font-black ${textColor} tracking-tighter uppercase`}>
-                {activeModal === 'dados' ? (isEditing ? 'Editar Perfil' : 'Meus Dados') : activeModal === 'historico' ? 'Histórico' : 'Ajustes'}
+              <Text
+                className={`text-3xl font-black ${textColor} tracking-tighter uppercase`}
+              >
+                {activeModal === 'dados'
+                  ? isEditing
+                    ? 'Editar Perfil'
+                    : 'Meus Dados'
+                  : activeModal === 'historico'
+                    ? 'Histórico'
+                    : 'Ajustes'}
               </Text>
-              <TouchableOpacity onPress={() => { setActiveModal(null); setIsEditing(false); }} className={`w-10 h-10 ${isDarkMode ? 'bg-white/10' : 'bg-gray-50'} rounded-full items-center justify-center`}>
-                <X size={20} color={isDarkMode ? 'white' : '#111827'} />
+              <TouchableOpacity
+                onPress={() => {
+                  setActiveModal(null);
+                  setIsEditing(false);
+                }}
+                className={`w-10 h-10 ${
+                  t.isDark ? 'bg-white/10' : 'bg-gray-50'
+                } rounded-full items-center justify-center`}
+              >
+                <X size={20} color={t.isDark ? 'white' : '#111827'} />
               </TouchableOpacity>
             </View>
             {renderModalContent()}
@@ -315,30 +435,55 @@ const ProfileScreen = () => {
         <View className="items-center py-8 px-6">
           <View className="relative">
             {user?.avatar ? (
-              <Image source={{ uri: user.avatar }} className="w-32 h-32 rounded-full border-4 border-green-500/20" />
+              <Image
+                source={{ uri: user.avatar }}
+                className="w-32 h-32 rounded-full border-4 border-green-500/20"
+              />
             ) : (
               <View className="w-32 h-32 rounded-full bg-green-500 items-center justify-center border-4 border-green-500/20">
-                <Text className="text-white text-4xl font-black">{getInitials(user?.name || '')}</Text>
+                <Text className="text-white text-4xl font-black">
+                  {getInitials(user?.name || '')}
+                </Text>
               </View>
             )}
             <View className="absolute bottom-1 right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-white items-center justify-center" />
           </View>
-          <Text className={`text-2xl font-black ${textColor} mt-4 tracking-tighter`}>{user?.name || 'Usuário'}</Text>
-          <Text className={`${subTextColor} font-bold text-xs uppercase tracking-widest mt-1`}>{user?.email}</Text>
+          <Text className={`text-2xl font-black ${textColor} mt-4 tracking-tighter`}>
+            {user?.name || 'Usuário'}
+          </Text>
+          <Text
+            className={`${subTextColor} font-bold text-xs uppercase tracking-widest mt-1`}
+          >
+            {user?.email}
+          </Text>
           <View className="bg-green-500/10 px-4 py-1.5 rounded-full mt-4 border border-green-500/20">
-            <Text className="text-green-600 font-black text-[10px] uppercase tracking-wider">Perfil {user?.tipo_perfil || 'Doador'}</Text>
+            <Text className="text-green-600 font-black text-[10px] uppercase tracking-wider">
+              Perfil {user?.tipo_perfil || 'Doador'}
+            </Text>
           </View>
         </View>
 
         <View className="px-6 mb-8">
-          <Text className={`text-[10px] font-black ${isDarkMode ? 'text-white/20' : 'text-gray-300'} mb-4 tracking-[3px] uppercase text-center`}>Meu Impacto Ambiental</Text>
+          <Text
+            className={`text-[10px] font-black ${
+              t.isDark ? 'text-white/20' : 'text-gray-300'
+            } mb-4 tracking-[3px] uppercase text-center`}
+          >
+            Meu Impacto Ambiental
+          </Text>
           <View className="flex-row" style={{ gap: 16 }}>
-            <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} items-center flex-1 shadow-sm`}>
+            <View
+              className={`${cardColor} p-6 rounded-[32px] border ${borderColor} items-center flex-1 shadow-sm`}
+            >
               <ShoppingBag size={24} color="#10B981" />
               <Text className={`text-2xl font-black ${textColor} mt-2 tracking-tighter`}>15</Text>
-              <Text className={`${subTextColor} text-[10px] font-black uppercase mt-1`}>Salvos</Text>
+              <Text className={`${subTextColor} text-[10px] font-black uppercase mt-1`}>
+                Salvos
+              </Text>
             </View>
-            <View className={`${cardColor} p-6 rounded-[32px] border ${borderColor} items-center flex-1 shadow-sm`}>
+            <View
+              className={`${cardColor} p-6 rounded-[32px] border ${borderColor} items-center flex-1 shadow-sm`}
+            >
               <Leaf size={24} color="#10B981" />
               <Text className={`text-2xl font-black ${textColor} mt-2 tracking-tighter`}>4kg</Text>
               <Text className={`${subTextColor} text-[10px] font-black uppercase mt-1`}>CO2</Text>
@@ -347,14 +492,36 @@ const ProfileScreen = () => {
         </View>
 
         <View className="px-6 pb-24">
-          <MenuItem icon={User} label="Meus Dados" isDarkMode={isDarkMode} onPress={() => setActiveModal('dados')} />
-          <MenuItem icon={Clock} label="Histórico de Coletas" isDarkMode={isDarkMode} onPress={() => setActiveModal('historico')} />
-          <MenuItem icon={Settings} label="Configurações" isDarkMode={isDarkMode} onPress={() => setActiveModal('config')} />
-          <MenuItem icon={LogOut} label="Sair da Conta" isDarkMode={isDarkMode} isLast danger onPress={logout} />
+          <MenuItem
+            icon={User}
+            label="Meus Dados"
+            isDarkMode={t.isDark}
+            onPress={() => setActiveModal('dados')}
+          />
+          <MenuItem
+            icon={Clock}
+            label={user?.tipo_perfil === 'Doador' ? 'Minhas Doações' : 'Histórico de Coletas'}
+            isDarkMode={t.isDark}
+            onPress={() => setActiveModal('historico')}
+          />
+          <MenuItem
+            icon={Settings}
+            label="Configurações"
+            isDarkMode={t.isDark}
+            onPress={() => setActiveModal('config')}
+          />
+          <MenuItem
+            icon={LogOut}
+            label="Sair da Conta"
+            isDarkMode={t.isDark}
+            isLast
+            danger
+            onPress={handleLogout}
+          />
         </View>
       </ScrollView>
       <BottomTabBar activeTab="Perfil" />
-    </StyledSafeAreaView>
+    </SafeAreaView>
   );
 };
 
