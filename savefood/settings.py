@@ -146,8 +146,16 @@ DATABASES = {
     }
 }
 
-if os.getenv('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+_database_url = os.getenv('DATABASE_URL')
+if _database_url:
+    # SSL é exigido em URLs externas (`*.render.com`) mas NÃO em URLs internas
+    # do Render (`dpg-xxx-a` sem dot). Forçar `ssl_require=True` numa URL
+    # interna faz a conexão falhar silenciosamente e o Django cai no SQLite.
+    _is_internal = '.render.com' not in _database_url
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        ssl_require=not _is_internal,
+    )
 
 
 # ---------------------------------------------------------------------------
