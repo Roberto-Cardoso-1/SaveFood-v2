@@ -20,7 +20,7 @@ import { tokenStorage } from './tokenStorage';
  * `services/auth.ts` injeta callbacks com `setAuthCallbacks`.
  */
 
-const FALLBACK_URL = 'https://oat-desenvolvimento-mobile.onrender.com/api/';
+const FALLBACK_URL = 'https://savefood-api.onrender.com/api/';
 
 export const API_BASE_URL =
   (process.env.EXPO_PUBLIC_API_URL as string | undefined) || FALLBACK_URL;
