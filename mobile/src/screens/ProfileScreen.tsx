@@ -162,9 +162,21 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = () => {
+    // `Alert.alert` no react-native-web nem sempre dispara os handlers dos
+    // botões — usamos `window.confirm` nativo na web pra garantir.
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      const confirmed = typeof window !== 'undefined'
+        ? window.confirm('Deseja realmente sair da conta?')
+        : true;
+      if (confirmed) {
+        void authService.logout();
+      }
+      return;
+    }
     Alert.alert('Sair', 'Deseja realmente sair da conta?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => authService.logout() },
+      { text: 'Sair', style: 'destructive', onPress: () => { void authService.logout(); } },
     ]);
   };
 

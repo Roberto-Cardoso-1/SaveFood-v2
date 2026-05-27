@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Platform,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -200,20 +201,33 @@ const HomeScreen = () => {
   };
 
   const handleDeleteDonation = (id: string, title: string) => {
+    const doDelete = async () => {
+      try {
+        await donationsService.remove(id);
+        removeLocal(id);
+      } catch {
+        if (Platform.OS === 'web') {
+          // eslint-disable-next-line no-alert
+          window.alert('Não foi possível excluir a doação.');
+        } else {
+          Alert.alert('Erro', 'Não foi possível excluir a doação.');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      // Alert.alert no react-native-web não dispara handlers; usar window.confirm.
+      // eslint-disable-next-line no-alert
+      const confirmed = typeof window !== 'undefined'
+        ? window.confirm(`Tem certeza que deseja remover "${title}"?`)
+        : false;
+      if (confirmed) void doDelete();
+      return;
+    }
+
     Alert.alert('Excluir publicação', `Tem certeza que deseja remover "${title}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await donationsService.remove(id);
-            removeLocal(id);
-          } catch {
-            Alert.alert('Erro', 'Não foi possível excluir a doação.');
-          }
-        },
-      },
+      { text: 'Excluir', style: 'destructive', onPress: () => { void doDelete(); } },
     ]);
   };
 
