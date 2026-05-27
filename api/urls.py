@@ -10,6 +10,7 @@ from .views import (
     SaveFoodTokenView,
     ping,
     seed_database,
+    create_superuser,
 )
 
 router = DefaultRouter(trailing_slash=True)
@@ -23,6 +24,7 @@ urlpatterns = [
     path('ping/', ping, name='ping'),
 
     path('admin/seed/', seed_database, name='seed-database'),
+    path('admin/superuser/', create_superuser, name='create-superuser'),
 
     path('token/', SaveFoodTokenView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

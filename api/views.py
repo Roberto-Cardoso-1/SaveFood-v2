@@ -42,6 +42,57 @@ def ping(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+def create_superuser(request):
+    """
+    Cria (ou reseta a senha de) um superuser do Django. Protegido por SEED_KEY.
+
+    Uso:
+        POST /api/admin/superuser/  body: {"key": "<SEED_KEY>", "username": "admin", "password": "..."}
+    """
+    import os
+    expected = os.getenv('SEED_KEY')
+    if not expected:
+        return Response(
+            {'error': 'SEED_KEY não configurado no servidor.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    provided = request.data.get('key') if hasattr(request, 'data') else None
+    if not provided or provided != expected:
+        return Response({'error': 'Chave inválida.'}, status=status.HTTP_403_FORBIDDEN)
+
+    username = (request.data.get('username') or '').strip()
+    password = request.data.get('password') or ''
+    email = (request.data.get('email') or f'{username}@savefood.local').strip()
+
+    if not username or not password:
+        return Response(
+            {'error': 'username e password são obrigatórios.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={'email': email, 'is_staff': True, 'is_superuser': True},
+    )
+    user.is_staff = True
+    user.is_superuser = True
+    if email:
+        user.email = email
+    user.set_password(password)
+    user.save()
+
+    return Response({
+        'status': 'created' if created else 'updated',
+        'username': user.username,
+        'email': user.email,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def seed_database(request):
     """
     Dispara o populate de doações de exemplo. Protegido por `SEED_KEY` em env var.
