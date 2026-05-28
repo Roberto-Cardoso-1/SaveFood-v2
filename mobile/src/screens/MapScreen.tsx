@@ -346,7 +346,7 @@ const MapScreen = () => {
             showsUserLocation
             showsMyLocationButton={false}
             showsCompass={false}
-            customMapStyle={t.isDark ? DARK_MAP_STYLE : []}
+            customMapStyle={t.isDark ? DARK_MAP_STYLE : undefined}
             onPress={() => setSelected(null)}
           >
             {visibleDonations.map((d) => (
