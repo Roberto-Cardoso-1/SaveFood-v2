@@ -96,11 +96,27 @@ const RegisterScreen = () => {
       setTimeout(() => setShowWelcomeModal(true), 1800);
     } catch (err: any) {
       const data = err?.response?.data;
-      const msg =
-        (data?.email && data.email[0]) ||
-        (data?.senha && data.senha[0]) ||
-        (data?.tipo_perfil && data.tipo_perfil[0]) ||
-        'Erro ao cadastrar. Tente novamente.';
+      const statusCode = err?.response?.status;
+      let msg: string;
+      if (!err?.response) {
+        msg = err?.code === 'ECONNABORTED'
+          ? 'O servidor demorou para responder. Aguarde alguns segundos e tente novamente.'
+          : 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.';
+      } else if (data?.email && data.email[0]) {
+        msg = data.email[0];
+      } else if (data?.senha && data.senha[0]) {
+        msg = data.senha[0];
+      } else if (data?.tipo_perfil && data.tipo_perfil[0]) {
+        msg = data.tipo_perfil[0];
+      } else if (data?.nome && data.nome[0]) {
+        msg = data.nome[0];
+      } else if (data?.detail) {
+        msg = String(data.detail);
+      } else if (typeof data === 'string') {
+        msg = data;
+      } else {
+        msg = `Erro ao cadastrar (HTTP ${statusCode ?? '?'}). Tente novamente.`;
+      }
       setError(msg);
     } finally {
       setLoading(false);
@@ -252,9 +268,10 @@ const RegisterScreen = () => {
               icon={Mail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
               value={email}
               onChangeText={(text) => {
-                setEmail(text);
+                setEmail(text.replace(/\s/g, '').toLowerCase());
                 setError(null);
               }}
             />

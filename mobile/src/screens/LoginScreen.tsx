@@ -55,13 +55,19 @@ const LoginScreen = () => {
       setTimeout(() => setShowWelcomeModal(true), 1800);
     } catch (err: any) {
       const status = err?.response?.status;
-      setError(
-        status === 401 || status === 400
-          ? 'E-mail ou senha incorretos.'
-          : status === 404
-            ? 'Usuário não encontrado.'
-            : 'Ocorreu um erro ao tentar entrar. Tente novamente.',
-      );
+      let msg: string;
+      if (!err?.response) {
+        msg = err?.code === 'ECONNABORTED'
+          ? 'O servidor demorou para responder. Aguarde alguns segundos e tente novamente.'
+          : 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.';
+      } else if (status === 401 || status === 400) {
+        msg = 'E-mail ou senha incorretos.';
+      } else if (status === 404) {
+        msg = 'Usuário não encontrado.';
+      } else {
+        msg = `Ocorreu um erro ao tentar entrar (HTTP ${status ?? '?'}). Tente novamente.`;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -177,9 +183,10 @@ const LoginScreen = () => {
                 icon={Mail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
                 value={email}
                 onChangeText={(text) => {
-                  setEmail(text);
+                  setEmail(text.replace(/\s/g, '').toLowerCase());
                   setError(null);
                 }}
               />

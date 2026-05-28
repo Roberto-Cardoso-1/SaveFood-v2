@@ -18,7 +18,7 @@ export function setAuthCallbacks(cb: AuthCallbacks) {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,
   headers: {
     Accept: 'application/json',
   },
@@ -47,7 +47,7 @@ async function performRefresh(): Promise<string | null> {
     const resp = await axios.post(
       `${API_BASE_URL.replace(/\/$/, '')}/token/refresh/`,
       { refresh },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 30000 },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 60000 },
     );
     const access: string = resp.data.access;
     const newRefresh: string | undefined = resp.data.refresh;
